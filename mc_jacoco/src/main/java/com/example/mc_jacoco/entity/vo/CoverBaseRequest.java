@@ -5,6 +5,7 @@ import lombok.Data;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author luping
@@ -45,7 +46,7 @@ public class CoverBaseRequest {
     /**
      * 收集覆盖率的类型
      */
-    @NotBlank(message = "收集覆盖率的类型不能为空")
+    @NotNull(message = "收集覆盖率的类型不能为空")
     @Max(value = 2)
     @Min(value = 1)
     private Integer type;
