@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--接口和映射文件相对应-->
+<mapper namespace="com.example.mc_jacoco.dao.CoverageReportDao">
+    <resultMap id="coverageReportEntity" type="com.example.mc_jacoco.entity.po.CoverageReportEntity">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="job_record_uuid" property="jobRecordUuid" jdbcType="VARCHAR"/>
+        <result column="request_status" property="requestStatus" jdbcType="INTEGER"/>
+        <result column="giturl" property="gitUrl" jdbcType="VARCHAR"/>
+        <result column="now_version" property="nowVersion" jdbcType="VARCHAR"/>
+        <result column="base_version" property="baseVersion" jdbcType="VARCHAR"/>
+        <result column="diffmethod" property="diffMethod" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="report_url" property="reportUrl" jdbcType="VARCHAR"/>
+        <result column="line_coverage" property="lineCoverage" jdbcType="DOUBLE"/>
+        <result column="branch_coverage" property="branchCoverage" jdbcType="DOUBLE"/>
+        <result column="err_msg" property="errMsg" jdbcType="VARCHAR"/>
+        <result column="sub_module" property="subModule" jdbcType="VARCHAR"/>
+        <result column="from" property="from" jdbcType="INTEGER"/>
+        <result column="now_local_path" property="nowLocalPath" jdbcType="VARCHAR"/>
+        <result column="base_local_path" property="baseLocalPath" jdbcType="VARCHAR"/>
+        <result column="log_file" property="log_file" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="DATE"/>
+        <result column="update_time" property="updateTime" jdbcType="DATE"/>
+    </resultMap>
+
+    <!--  保存覆盖率数据  -->
+    <insert id="insertCoverageReportById" parameterType="com.example.mc_jacoco.entity.po.CoverageReportEntity">
+        INSERT INTO diff_coverage_report(`from`, `job_record_uuid`, `giturl`, `now_version`, `base_version`, `type`,
+                                         `sub_module`, `line_coverage`,
+                                         `branch_coverage`, `request_status`, `err_msg`)
+        values (#{from,jdbcType=INTEGER},
+                #{jobRecordUuid,jdbcType=VARCHAR},
+                #{gitUrl,jdbcType=VARCHAR},
+                #{nowVersion,jdbcType=VARCHAR},
+                #{baseVersion,jdbcType=VARCHAR},
+                #{type,jdbcType=INTEGER},
+                #{subModule,jdbcType=VARCHAR},
+                #{branchCoverage,jdbcType=DOUBLE},
+                #{lineCoverage,jdbcType=DOUBLE},
+                #{requestStatus,jdbcType=INTEGER},
+                #{errMsg,jdbcType=VARCHAR})
+    </insert>
+
+</mapper>
