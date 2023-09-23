@@ -18,5 +18,4 @@ public class EnvCoverRequest extends CoverBaseRequest {
      * 环境地址端口
      */
     private String port;
-
 }

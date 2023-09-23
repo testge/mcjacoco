@@ -6,6 +6,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @author luping
@@ -13,6 +14,11 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 public class CoverBaseRequest {
+
+    /**
+     * 主键ID
+     */
+    private Integer id;
 
     /**
      * uuid是必须的，在后续查询结果时需要使用 属于唯一ID
@@ -50,4 +56,14 @@ public class CoverBaseRequest {
     @Max(value = 2)
     @Min(value = 1)
     private Integer type;
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
 }

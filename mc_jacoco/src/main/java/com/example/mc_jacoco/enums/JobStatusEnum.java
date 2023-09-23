@@ -5,7 +5,10 @@ package com.example.mc_jacoco.enums;
  * @date 2023/9/18 23:03
  */
 public enum JobStatusEnum {
-    NODIFF(100, "无增量"),;
+    NODIFF(100, "无增量"),
+    WAITING(1, "待执行"),
+    CLONING(2, "下载代码中");
+
 
     private Integer code;
 

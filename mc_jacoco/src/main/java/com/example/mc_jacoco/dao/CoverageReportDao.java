@@ -2,6 +2,7 @@ package com.example.mc_jacoco.dao;
 
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @author luping
@@ -16,5 +17,12 @@ public interface CoverageReportDao {
      * @return
      */
     Integer insertCoverageReportById(CoverageReportEntity coverageReportEntity);
+
+    /**
+     * 根据ID修改coverageReportEntity表数据
+     * @param coverageReportEntity
+     * @return
+     */
+    Integer updateCoverageReportById(@Param("coverageReportEntity") CoverageReportEntity coverageReportEntity);
 
 }

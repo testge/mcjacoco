@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--接口和映射文件相对应-->
+<mapper namespace="com.example.mc_jacoco.dao.DeployInfoDao">
+    <resultMap id="coverageReportEntity" type="com.example.mc_jacoco.entity.vo.EnvCoverRequest">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="job_record_uuid" property="uuid" jdbcType="VARCHAR"/>
+        <result column="giturl" property="gitUrl" jdbcType="VARCHAR"/>
+        <result column="code_path" property="nowVersion" jdbcType="VARCHAR"/>
+        <result column="base_version" property="baseVersion" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="port" property="port" jdbcType="VARCHAR"/>
+        <result column="child_modules" property="subModule" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="DOUBLE"/>
+        <result column="create_time" property="createTime" jdbcType="DATE"/>
+        <result column="update_time" property="updateTime" jdbcType="DATE"/>
+    </resultMap>
+    <!--  新增服务部署数据  -->
+    <insert id="insertDeployInfo">
+        INSERT INTO diff_deploy_info (job_record_uuid, address, port, child_modules, code_path, create_time,
+                                      update_time)
+        VALUES (#{uuid,jdbcType=VARCHAR},
+                #{address,jdbcType=VARCHAR},
+                #{port,jdbcType=VARCHAR},
+                #{nowVersion,jdbcType=VARCHAR},
+                #{subModule,jdbcType=VARCHAR},
+                #{createTime,jdbcType=DATE},
+                #{updateTime,jdbcType=DATE})
+    </insert>
+</mapper>
