@@ -53,13 +53,12 @@ public class GitHandler {
         Git git = gitInit(codePath)
                 .cloneRepository()
                 .setURI(gitUrl)
-//                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitUserName, gitPwd))
-                .setCredentialsProvider(new UsernamePasswordCredentialsProvider("294402584@qq.com", "456.caocao"))
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitUserName, gitUrl))
                 .setGitDir(new File(codePath))
                 .setBranch(commitId)
                 .call();
         // 切换到当前版本分支
-//        checkoutBranch(git, commitId);
+        checkoutBranch(git, commitId);
         log.info("【获取Git开始执行代码下载成功...】");
         return git;
     }
@@ -89,11 +88,5 @@ public class GitHandler {
             }
         };
         return sshSessionFactory;
-    }
-
-    public static void main(String[] args) throws GitAPIException {
-        GitHandler git = new GitHandler();
-        git.cloneRepository("git@github.com:lupingp/jacoco_study_project_test.git","/Users/luping/apps/mcs_jacoco/clonecode/11111111111110018/newTest01","feature/newTest01");
-//        git.cloneRepository("git@github.com:lupingp/jacoco_study_project_test.git","/Users/luping/app/mcs_jacoco/clonecode/11111111111110017/newTest01","38be239020eab0aa2b4d17445511602e91d40060");
     }
 }
