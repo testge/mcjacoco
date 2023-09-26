@@ -1,5 +1,6 @@
 package com.example.mc_jacoco.util;
 
+import ch.qos.logback.core.util.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
@@ -17,17 +18,15 @@ public class FilesUtil {
         try {
             File file = new File(fileName);
             if (file.exists()) {
-                System.out.println("撒打撒打算");
                 FileUtils.cleanDirectory(new File(fileName));
             }
-//            file.mkdirs();
         } catch (IOException io) {
             log.error("【文件校验是否存在出错...】【原因：{}】", io.getMessage());
         }
         return false;
     }
 
-    public static void main(String[] args) {
-        System.out.println(FilesUtil.fileExists("/Users/luping/app/mcs_jacoco/clonecode/sdsdsadasdada/feature_newTest01"));
-    }
+//    public static void main(String[] args) {
+//        System.out.println(FilesUtil.fileExists("/Users/luping/app/mcs_jacoco/clonecode/sdsdsadasdada/feature_newTest01"));
+//    }
 }

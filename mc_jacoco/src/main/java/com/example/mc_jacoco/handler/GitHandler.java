@@ -50,11 +50,11 @@ public class GitHandler {
 
     public Git cloneRepository(String gitUrl, String codePath, String commitId) throws GitAPIException {
         log.info("【获取Git开始执行代码下载,入参：{},{},{}】",gitUrl,codePath,commitId);
-        Git git = gitInit(codePath)
+        Git git = Git
                 .cloneRepository()
                 .setURI(gitUrl)
                 .setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitUserName, gitUrl))
-                .setGitDir(new File(codePath))
+                .setDirectory(new File(codePath))
                 .setBranch(commitId)
                 .call();
         // 切换到当前版本分支
@@ -63,11 +63,15 @@ public class GitHandler {
         return git;
     }
 
-    private Ref checkoutBranch(Git git, String branch) throws GitAPIException {
-        log.info("【切换分支执行中...】");
-        Ref ref = git.checkout().setName(branch).call();
-        log.info("【获取Git开始执行分支切换成功...】");
-        return ref;
+    private Ref checkoutBranch(Git git, String branch){
+        try {
+            log.info("【切换分支执行中...】");
+            Ref ref = git.checkout().setName(branch).call();
+            log.info("【获取Git开始执行分支切换成功...】");
+            return ref;
+        }catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 
@@ -89,4 +93,11 @@ public class GitHandler {
         };
         return sshSessionFactory;
     }
+//    public static void main(String[] args) throws GitAPIException {
+//        String locl = "git@github.com:lupingp/jacoco_study_project_test.git";
+//        String locl1 = "/Users/luping/app/mcs_jacoco/clonecode/101000000170009/main";
+//        String locl2 = "main";
+//        GitHandler gitSSh = new GitHandler();
+//        gitSSh.cloneRepository(locl,locl1,locl2);
+//    }
 }

@@ -36,14 +36,13 @@ public class CodeCloneExecutor {
             String uuid = coverageReportEntity.getJobRecordUuid();
             String nowLoaclPath = AddressConstants.CODE_ROOT + uuid + "/" + coverageReportEntity.getNowVersion().replace("/", "_");
             coverageReportEntity.setNowLocalPath(nowLoaclPath);
-            FilesUtil.fileExists(nowLoaclPath);
+            FilesUtil.fileExists(AddressConstants.CODE_ROOT + uuid + "/");
             String getUrl = coverageReportEntity.getGitUrl();
             log.info("【uuid:【{}】开始下载代码...】", uuid);
             log.info("【下载当前版本分支代码...】");
             gitHandler.cloneRepository(getUrl,nowLoaclPath,coverageReportEntity.getNowVersion());
             String baseLocalPath = AddressConstants.CODE_ROOT + uuid + "/" + coverageReportEntity.getBaseVersion().replace("/","_");
             coverageReportEntity.setBaseLocalPath(baseLocalPath);
-            FilesUtil.fileExists(baseLocalPath);
             log.info("【下载基准版本分支代码...】");
             gitHandler.cloneRepository(getUrl,baseLocalPath,coverageReportEntity.getBaseVersion());
             coverageReportEntity.setRequestStatus(JobStatusEnum.CLONE_DONE.getCode());
