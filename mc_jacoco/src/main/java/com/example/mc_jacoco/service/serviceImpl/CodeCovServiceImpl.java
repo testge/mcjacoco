@@ -7,6 +7,7 @@ import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.enums.ReportTypeEnum;
+import com.example.mc_jacoco.executor.CodeCloneExecutor;
 import com.example.mc_jacoco.service.CodeCovService;
 import com.example.mc_jacoco.util.DoubleUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,9 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     @Resource
     private DeployInfoDao deployInfoDao;
+
+    @Resource
+    private CodeCloneExecutor codeCloneExecutor;
 
     /**
      * 收集覆盖率
@@ -72,6 +76,8 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportEntity.setRequestStatus(JobStatusEnum.CLONING.getCode());
         Integer updateId = coverageReportDao.updateCoverageReportById(coverageReportEntity);
         log.info("【数据更新成功：{}】", updateId);
+        codeCloneExecutor.cloneCode(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
 
     }
 

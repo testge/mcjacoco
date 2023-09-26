@@ -7,7 +7,9 @@ package com.example.mc_jacoco.enums;
 public enum JobStatusEnum {
     NODIFF(100, "无增量"),
     WAITING(1, "待执行"),
-    CLONING(2, "下载代码中");
+    CLONING(2, "下载代码中"),
+    CLONE_DONE(102, "下载代码成功"),
+    CLONE_FAIL(202, "下载代码失败");
 
 
     private Integer code;
