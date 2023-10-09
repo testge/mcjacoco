@@ -26,7 +26,41 @@ public class FilesUtil {
         return false;
     }
 
-//    public static void main(String[] args) {
-//        System.out.println(FilesUtil.fileExists("/Users/luping/app/mcs_jacoco/clonecode/sdsdsadasdada/feature_newTest01"));
-//    }
+    /**
+     * 创建文件路径及文件
+     * @param directory 目录地址
+     * @param fileName 文件地址
+     */
+    public static void mkdir(String directory,String fileName){
+        try {
+            File fileDirectory = new File(directory);
+            File fileNames = new File(directory);
+            if (!fileDirectory.isDirectory()){
+                FileUtils.forceMkdir(fileDirectory);
+            }
+            if (!fileNames.exists()){
+                FileUtils.touch(fileNames);
+            }
+        }catch (IOException io) {
+            log.error("【目录及文件创建失败....原因是：{}】",io.getMessage());
+        }
+    }
+
+    /**
+     * 返回当前目录下的项目目录，目前只会存在一个
+     * @param fileName
+     * @return
+     */
+    public static String resultfileDirectory(String fileName){
+        File fileDirectory = new File(fileName);
+        String[] filenames = fileDirectory.list();
+        String directory = "";
+        for (String name: filenames) {
+            if(!name.startsWith(".")){
+                directory = name;
+                break;
+            }
+        }
+        return directory;
+    }
 }

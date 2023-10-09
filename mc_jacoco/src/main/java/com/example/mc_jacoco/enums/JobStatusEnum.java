@@ -8,8 +8,12 @@ public enum JobStatusEnum {
     NODIFF(100, "无增量"),
     WAITING(1, "待执行"),
     CLONING(2, "下载代码中"),
+    COMPILING(3, "编译中"),
     CLONE_DONE(102, "下载代码成功"),
-    CLONE_FAIL(202, "下载代码失败");
+    COMPILE_DONE(103, "编译成功"),
+    CLONE_FAIL(202, "下载代码失败"),
+    COMPILE_FAIL(203, "编译失败"),
+    ;
 
 
     private Integer code;

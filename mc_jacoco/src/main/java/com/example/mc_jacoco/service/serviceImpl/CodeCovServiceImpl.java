@@ -7,7 +7,9 @@ import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.enums.ReportTypeEnum;
+import com.example.mc_jacoco.executor.CmdExecutor;
 import com.example.mc_jacoco.executor.CodeCloneExecutor;
+import com.example.mc_jacoco.executor.CodeCompilerExecutor;
 import com.example.mc_jacoco.service.CodeCovService;
 import com.example.mc_jacoco.util.DoubleUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,9 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     @Resource
     private CodeCloneExecutor codeCloneExecutor;
+
+    @Resource
+    private CodeCompilerExecutor codeCompilerExecutor;
 
     /**
      * 收集覆盖率
@@ -78,6 +83,18 @@ public class CodeCovServiceImpl implements CodeCovService {
         log.info("【数据更新成功：{}】", updateId);
         codeCloneExecutor.cloneCode(coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        if (JobStatusEnum.CLONE_FAIL.getCode().equals(coverageReportEntity.getRequestStatus())) {
+            log.error("【代码克隆失败...UUID：{}】【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
+            return;
+        }
+        //开始编译代码
+        coverageReportEntity.setRequestStatus(JobStatusEnum.COMPILING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        codeCompilerExecutor.compileCode(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        if (!JobStatusEnum.COMPILE_DONE.getCode().equals(coverageReportEntity.getRequestStatus())) {
+            log.error("【{}】编译失败...【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
+        }
 
     }
 
