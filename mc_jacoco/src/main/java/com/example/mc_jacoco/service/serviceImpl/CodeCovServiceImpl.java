@@ -3,6 +3,7 @@ package com.example.mc_jacoco.service.serviceImpl;
 import com.example.mc_jacoco.dao.CoverageReportDao;
 import com.example.mc_jacoco.dao.DeployInfoDao;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
+import com.example.mc_jacoco.entity.po.DeployInfoEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
@@ -95,6 +96,11 @@ public class CodeCovServiceImpl implements CodeCovService {
         if (!JobStatusEnum.COMPILE_DONE.getCode().equals(coverageReportEntity.getRequestStatus())) {
             log.error("【{}】编译失败...【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
         }
+        DeployInfoEntity deployInfoEntity = new DeployInfoEntity();
+        deployInfoEntity.setUuid(coverageReportEntity.getJobRecordUuid());
+        deployInfoEntity.setCodePath(coverageReportEntity.getNowLocalPath());
+        String pomPath = deployInfoEntity.getCodePath()+"/pom.xml";
+
 
     }
 

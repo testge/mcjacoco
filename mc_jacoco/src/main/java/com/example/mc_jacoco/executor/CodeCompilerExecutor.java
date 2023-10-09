@@ -29,7 +29,7 @@ public class CodeCompilerExecutor {
         String logFile = coverageReportEntity.getLog_file().replace(LocalIpUtil.getBaseUrl() + "logs/", AddressConstants.LOG_PATH);
         // 创建目录及log文件
         FilesUtil.mkdir(AddressConstants.LOG_PATH, logFile);
-        String[] compileCmd = new String[]{"cd " + coverageReportEntity.getNowLocalPath() + "/" + FilesUtil.resultfileDirectory(coverageReportEntity.getNowLocalPath()) + "&&mvn clean compile " +
+        String[] compileCmd = new String[]{"cd " + coverageReportEntity.getNowLocalPath() + "&&mvn clean compile " +
                 (StringUtils.isEmpty(coverageReportEntity.getEnvType()) ? "" : "-p=" + coverageReportEntity.getEnvType()) + ">>" + logFile};
         try {
             Integer cmdExecutor = CmdExecutor.cmdExecutor(compileCmd, 600000L);

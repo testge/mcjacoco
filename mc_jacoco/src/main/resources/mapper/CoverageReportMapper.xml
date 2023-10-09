@@ -88,7 +88,7 @@
                 now_local_path = #{coverageReportEntity.nowLocalPath,jdbcType=VARCHAR},
             </if>
             <if test="coverageReportEntity.baseLocalPath != null">
-                base_local_path = #{coverageReportEntity.baseVersion,jdbcType=VARCHAR},
+                base_local_path = #{coverageReportEntity.baseLocalPath,jdbcType=VARCHAR},
             </if>
             <if test="coverageReportEntity.log_file != null">
                 log_file = #{coverageReportEntity.log_file,jdbcType=VARCHAR}
