@@ -1,7 +1,9 @@
 package com.example.mc_jacoco.dao;
 
+import com.example.mc_jacoco.entity.po.DeployInfoEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @author luping
@@ -11,4 +13,6 @@ import org.apache.ibatis.annotations.Mapper;
 public interface DeployInfoDao {
 
     Integer insertDeployInfo(EnvCoverRequest envCoverRequest);
+
+    Integer updateDeployInfoByUuid(@Param("deployInfoEntity") DeployInfoEntity deployInfoEntity);
 }

@@ -9,10 +9,13 @@ public enum JobStatusEnum {
     WAITING(1, "待执行"),
     CLONING(2, "下载代码中"),
     COMPILING(3, "编译中"),
+    DIFF_METHODS_EXECUTING(4, "计算增量方法中"),
     CLONE_DONE(102, "下载代码成功"),
     COMPILE_DONE(103, "编译成功"),
+    DIFF_METHOD_DONE(104, "计算增量方法成功"),
     CLONE_FAIL(202, "下载代码失败"),
     COMPILE_FAIL(203, "编译失败"),
+    DIFF_METHOD_FAIL(204, "计算增量方法失败"),
     ;
 
 

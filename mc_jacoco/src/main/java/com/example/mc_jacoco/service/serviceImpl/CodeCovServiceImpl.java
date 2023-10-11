@@ -2,6 +2,7 @@ package com.example.mc_jacoco.service.serviceImpl;
 
 import com.example.mc_jacoco.dao.CoverageReportDao;
 import com.example.mc_jacoco.dao.DeployInfoDao;
+import com.example.mc_jacoco.entity.dto.CoverageReportDto;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.po.DeployInfoEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
@@ -11,12 +12,17 @@ import com.example.mc_jacoco.enums.ReportTypeEnum;
 import com.example.mc_jacoco.executor.CmdExecutor;
 import com.example.mc_jacoco.executor.CodeCloneExecutor;
 import com.example.mc_jacoco.executor.CodeCompilerExecutor;
+import com.example.mc_jacoco.executor.DiffMethodsExecutor;
 import com.example.mc_jacoco.service.CodeCovService;
 import com.example.mc_jacoco.util.DoubleUtil;
+import com.example.mc_jacoco.util.MavenModuleUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * @author luping
@@ -37,6 +43,9 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     @Resource
     private CodeCompilerExecutor codeCompilerExecutor;
+
+    @Resource
+    private DiffMethodsExecutor diffMethodsExecutor;
 
     /**
      * 收集覆盖率
@@ -66,11 +75,28 @@ public class CodeCovServiceImpl implements CodeCovService {
             new Thread(() -> {
                 log.info("【开始执行代码编译...】");
                 cloneCodeAndCompileCode(coverageReportEntity);
+                log.info("【计算增量方法diff集合...】");
+                calculateDeployDiffMethods(coverageReportEntity);
+
 
             }).start();
         } catch (Exception e) {
             log.error(e.getMessage());
         }
+    }
+
+    /**
+     * 计算增量方法Diff集合
+     * @param coverageReportEntity
+     */
+    @Override
+    public void calculateDeployDiffMethods(CoverageReportEntity coverageReportEntity) {
+        log.info("【calculateDeployDiffMethods的入参信息：{}】",coverageReportEntity);
+        coverageReportEntity.setRequestStatus(JobStatusEnum.DIFF_METHODS_EXECUTING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        // 计算diff方法集合
+        diffMethodsExecutor.executeDiffMethods(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
     }
 
     /**
@@ -88,20 +114,32 @@ public class CodeCovServiceImpl implements CodeCovService {
             log.error("【代码克隆失败...UUID：{}】【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
             return;
         }
+        CoverageReportDto coverageReportDto = new CoverageReportDto();
+        BeanUtils.copyProperties(coverageReportEntity, coverageReportDto);
         //开始编译代码
         coverageReportEntity.setRequestStatus(JobStatusEnum.COMPILING.getCode());
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
-        codeCompilerExecutor.compileCode(coverageReportEntity);
+        codeCompilerExecutor.compileCode(coverageReportDto);
+        BeanUtils.copyProperties(coverageReportDto,coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         if (!JobStatusEnum.COMPILE_DONE.getCode().equals(coverageReportEntity.getRequestStatus())) {
             log.error("【{}】编译失败...【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
         }
-        DeployInfoEntity deployInfoEntity = new DeployInfoEntity();
-        deployInfoEntity.setUuid(coverageReportEntity.getJobRecordUuid());
-        deployInfoEntity.setCodePath(coverageReportEntity.getNowLocalPath());
-        String pomPath = deployInfoEntity.getCodePath()+"/pom.xml";
-
-
+        // 获取Pom的Modules模块
+        String pomPath = coverageReportDto.getNowLocalPathProject() + "/pom.xml";
+        ArrayList<String> modulesList = MavenModuleUtil.getValidModules(pomPath);
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < modulesList.size(); i++) {
+            if (i < modulesList.size() - 1) {
+                buffer.append(modulesList.get(i)).append(",");
+            } else {
+                buffer.append(modulesList.get(i));
+            }
+        }
+        DeployInfoEntity deployInfoEntity = deployInfoEntityBuild(coverageReportEntity, buffer.toString());
+        log.info("【更新部署表信息内容入参：{}】",deployInfoEntity);
+        Integer updateDeployment = deployInfoDao.updateDeployInfoByUuid(deployInfoEntity);
+        log.info("【更新部署表信息内容成功返回值：{}】",updateDeployment);
     }
 
     private CoverageReportEntity coverageReportEntityBuild(EnvCoverRequest envCoverRequest) {
@@ -117,5 +155,13 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportEntity.setLineCoverage(-1.00);
         coverageReportEntity.setBranchCoverage(-1.00);
         return coverageReportEntity;
+    }
+
+    private DeployInfoEntity deployInfoEntityBuild(CoverageReportEntity coverageReportEntity, String modules) {
+        DeployInfoEntity deployInfoEntity = new DeployInfoEntity();
+        deployInfoEntity.setUuid(coverageReportEntity.getJobRecordUuid());
+        deployInfoEntity.setCodePath(coverageReportEntity.getNowLocalPath());
+        deployInfoEntity.setChildModules(modules);
+        return deployInfoEntity;
     }
 }

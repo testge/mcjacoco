@@ -1,5 +1,7 @@
 package com.example.mc_jacoco.constants;
 
+import com.example.mc_jacoco.util.LocalIpUtil;
+
 /**
  * @author luping
  * @date 2023/9/26 22:07
@@ -11,4 +13,6 @@ public class AddressConstants {
 
     // 系统编译代码日志文件
     public static final String LOG_PATH = System.getProperty("user.home") + "/report/logs/";
+
+    public static final String NO_CODE_COVERGET_REPORT = LocalIpUtil.getBaseUrl() + "nodiffcode.html";
 }

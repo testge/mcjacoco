@@ -1,4 +1,4 @@
-package com.example.mc_jacoco.entity.po;
+package com.example.mc_jacoco.entity.dto;
 
 import lombok.Data;
 
@@ -6,15 +6,12 @@ import java.util.Date;
 
 /**
  * @author luping
- * @date 2023/9/18 22:06
- * 覆盖率报告实体
+ * @date 2023/10/11 23:23
  */
-@Data
-public class CoverageReportEntity {
 
-    /**
-     * 自增ID
-     */
+@Data
+public class CoverageReportDto {
+
     private Integer id;
 
     /**
@@ -125,7 +122,7 @@ public class CoverageReportEntity {
 
     @Override
     public String toString() {
-        return "CoverageReportEntity{" +
+        return "CoverageReportDto{" +
                 "id=" + id +
                 ", jobRecordUuid='" + jobRecordUuid + '\'' +
                 ", requestStatus=" + requestStatus +
@@ -146,6 +143,8 @@ public class CoverageReportEntity {
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", envType='" + envType + '\'' +
+                ", nowLocalPathProject='" + nowLocalPathProject + '\'' +
+                ", baseLocalPathProject='" + baseLocalPathProject + '\'' +
                 '}';
     }
 }

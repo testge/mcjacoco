@@ -30,4 +30,17 @@
                 #{createTime,jdbcType=DATE},
                 #{updateTime,jdbcType=DATE})
     </insert>
+
+    <update id="updateDeployInfoByUuid">
+        update diff_deploy_info
+        <set>
+            <if test="deployInfoEntity.childModules != null">
+                child_modules = #{deployInfoEntity.childModules,jdbcType=VARCHAR},
+            </if>
+            <if test="deployInfoEntity.codePath != null">
+                code_path = #{deployInfoEntity.codePath,jdbcType=VARCHAR}
+            </if>
+        </set>
+        where job_record_uuid = #{deployInfoEntity.uuid,jdbcType=VARCHAR}
+    </update>
 </mapper>

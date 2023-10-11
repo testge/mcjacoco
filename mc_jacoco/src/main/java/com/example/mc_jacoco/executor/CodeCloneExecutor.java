@@ -32,7 +32,6 @@ public class CodeCloneExecutor {
         // 定义log文件地址（基础地址+uuid）
         String logFile = LocalIpUtil.getBaseUrl() + "logs/" + coverageReportEntity.getJobRecordUuid() + ".log";
         coverageReportEntity.setLog_file(logFile);
-        String fileName = "";
         try {
             String uuid = coverageReportEntity.getJobRecordUuid();
             String nowLoaclPath = AddressConstants.CODE_ROOT + uuid + "/" + coverageReportEntity.getNowVersion().replace("/", "_");
@@ -41,13 +40,13 @@ public class CodeCloneExecutor {
             log.info("【uuid:【{}】开始下载代码...】", uuid);
             log.info("【下载当前版本分支代码...】");
             gitHandler.cloneRepository(getUrl, nowLoaclPath, coverageReportEntity.getNowVersion());
-            fileName = nowLoaclPath + "/" + FilesUtil.resultfileDirectory(nowLoaclPath);
-            coverageReportEntity.setNowLocalPath(fileName);
+            coverageReportEntity.setNowLocalPath(nowLoaclPath);
+            coverageReportEntity.setNowLocalPathProject(nowLoaclPath + "/" + FilesUtil.resultfileDirectory(coverageReportEntity.getNowLocalPath()));
             String baseLocalPath = AddressConstants.CODE_ROOT + uuid + "/" + coverageReportEntity.getBaseVersion().replace("/", "_");
             log.info("【下载基准版本分支代码...】");
             gitHandler.cloneRepository(getUrl, baseLocalPath, coverageReportEntity.getBaseVersion());
-            fileName = baseLocalPath + "/" + FilesUtil.resultfileDirectory(baseLocalPath);
-            coverageReportEntity.setBaseLocalPath(fileName);
+            coverageReportEntity.setBaseLocalPath(baseLocalPath);
+            coverageReportEntity.setBaseLocalPathProject(baseLocalPath + "/" + FilesUtil.resultfileDirectory(coverageReportEntity.getBaseLocalPath()));
             coverageReportEntity.setRequestStatus(JobStatusEnum.CLONE_DONE.getCode());
         } catch (Exception e) {
             log.error("【下载代码失败...】【UUID：{}】【异常信息：{}】", coverageReportEntity.getJobRecordUuid(), e.getMessage());
@@ -55,5 +54,4 @@ public class CodeCloneExecutor {
             coverageReportEntity.setRequestStatus(JobStatusEnum.CLONE_FAIL.getCode());
         }
     }
-
 }

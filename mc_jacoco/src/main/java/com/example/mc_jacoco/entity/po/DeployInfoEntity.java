@@ -14,7 +14,7 @@ public class DeployInfoEntity {
 
     private String address;
 
-    private int port;
+    private Integer port;
 
     private String codePath;
 
