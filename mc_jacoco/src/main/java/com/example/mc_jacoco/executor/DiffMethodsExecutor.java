@@ -2,7 +2,6 @@ package com.example.mc_jacoco.executor;
 
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.util.JDiffFiles;
-import com.example.mc_jacoco.util.MethodParserUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

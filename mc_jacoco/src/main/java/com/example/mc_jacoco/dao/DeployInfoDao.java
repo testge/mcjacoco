@@ -15,4 +15,6 @@ public interface DeployInfoDao {
     Integer insertDeployInfo(EnvCoverRequest envCoverRequest);
 
     Integer updateDeployInfoByUuid(@Param("deployInfoEntity") DeployInfoEntity deployInfoEntity);
+
+    DeployInfoEntity queryDeployInfoByUuid(@Param("uuid") String uuid);
 }

@@ -18,6 +18,11 @@
         <result column="create_time" property="createTime" jdbcType="DATE"/>
         <result column="update_time" property="updateTime" jdbcType="DATE"/>
     </resultMap>
+
+    <sql id="deployInfo">
+        id
+        ,job_record_uuid,giturl,code_path,base_version,address,port,child_modules,type
+    </sql>
     <!--  新增服务部署数据  -->
     <insert id="insertDeployInfo">
         INSERT INTO diff_deploy_info (job_record_uuid, address, port, child_modules, code_path, create_time,
@@ -43,4 +48,10 @@
         </set>
         where job_record_uuid = #{deployInfoEntity.uuid,jdbcType=VARCHAR}
     </update>
+
+    <select id="queryDeployInfoByUuid" resultType="com.example.mc_jacoco.entity.po.DeployInfoEntity">
+        SELECT
+        <include refid="deployInfo"/>
+        from diff_deploy_info where job_record_uuid = #{uuid,jdbcType=VARCHAR}
+    </select>
 </mapper>

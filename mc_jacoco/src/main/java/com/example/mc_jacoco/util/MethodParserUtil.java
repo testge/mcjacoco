@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MethodParserUtil {
 
-    protected HashMap<String, String> methodMd5Map = new HashMap<String, String>();
+    protected HashMap<String, String> methodMd5Map;
 
     /**
      * 解析方法
@@ -37,6 +37,7 @@ public class MethodParserUtil {
      * @return
      */
     public  HashMap<String, String> parseMethodsMd5(String fileName) {
+        methodMd5Map = new HashMap<>();
         try {
             FileInputStream inputStream = new FileInputStream(fileName);
             CompilationUnit cu = JavaParser.parse(inputStream);
@@ -59,6 +60,7 @@ public class MethodParserUtil {
     private class MethodMd5Visitor extends VoidVisitorAdapter<Void> {
         @Override
         public void visit(MethodDeclaration n, Void arg) {
+
             // 获取方法参数
             NodeList<Parameter> parameters = n.getParameters();
             // 获取全部的方法名+参数？？？

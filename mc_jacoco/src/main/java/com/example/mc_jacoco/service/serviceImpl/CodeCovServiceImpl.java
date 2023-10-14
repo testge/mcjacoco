@@ -1,5 +1,6 @@
 package com.example.mc_jacoco.service.serviceImpl;
 
+import com.example.mc_jacoco.constants.AddressConstants;
 import com.example.mc_jacoco.dao.CoverageReportDao;
 import com.example.mc_jacoco.dao.DeployInfoDao;
 import com.example.mc_jacoco.entity.dto.CoverageReportDto;
@@ -15,6 +16,8 @@ import com.example.mc_jacoco.executor.CodeCompilerExecutor;
 import com.example.mc_jacoco.executor.DiffMethodsExecutor;
 import com.example.mc_jacoco.service.CodeCovService;
 import com.example.mc_jacoco.util.DoubleUtil;
+import com.example.mc_jacoco.util.GetIPAddressUtil;
+import com.example.mc_jacoco.util.LocalIpUtil;
 import com.example.mc_jacoco.util.MavenModuleUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * @author luping
@@ -77,7 +81,7 @@ public class CodeCovServiceImpl implements CodeCovService {
                 cloneCodeAndCompileCode(coverageReportEntity);
                 log.info("【计算增量方法diff集合...】");
                 calculateDeployDiffMethods(coverageReportEntity);
-
+                log.info("【开始计算代码覆盖率...】");
 
             }).start();
         } catch (Exception e) {
@@ -87,16 +91,40 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     /**
      * 计算增量方法Diff集合
+     *
      * @param coverageReportEntity
      */
     @Override
     public void calculateDeployDiffMethods(CoverageReportEntity coverageReportEntity) {
-        log.info("【calculateDeployDiffMethods的入参信息：{}】",coverageReportEntity);
+        log.info("【calculateDeployDiffMethods的入参信息：{}】", coverageReportEntity);
         coverageReportEntity.setRequestStatus(JobStatusEnum.DIFF_METHODS_EXECUTING.getCode());
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         // 计算diff方法集合
         diffMethodsExecutor.executeDiffMethods(coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
+    }
+
+    /**
+     * 从项目机器上拉取功能测试的执行轨迹.exec文件，计算增量方法覆盖率
+     *
+     * @param coverageReportEntity
+     */
+    @Override
+    public void calculateEnvCov(CoverageReportEntity coverageReportEntity) {
+        // 执行日志地址
+        String logFile = coverageReportEntity.getLog_file().replace(LocalIpUtil.getBaseUrl() + "logs/", AddressConstants.LOG_PATH);
+        String uuid = coverageReportEntity.getJobRecordUuid();
+        DeployInfoEntity deployInfoEntity = deployInfoDao.queryDeployInfoByUuid(uuid);
+        // 根据是增量覆盖率还是全部覆盖率，设置报告名称
+        String reportName;
+        if (Objects.equals(coverageReportEntity.getType(), ReportTypeEnum.DIFF.getCode())) {
+            reportName = "ManualDiffCoverage";
+        } else {
+            reportName = "ManualCoverage";
+        }
+
+
+
     }
 
     /**
@@ -120,7 +148,7 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportEntity.setRequestStatus(JobStatusEnum.COMPILING.getCode());
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         codeCompilerExecutor.compileCode(coverageReportDto);
-        BeanUtils.copyProperties(coverageReportDto,coverageReportEntity);
+        BeanUtils.copyProperties(coverageReportDto, coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         if (!JobStatusEnum.COMPILE_DONE.getCode().equals(coverageReportEntity.getRequestStatus())) {
             log.error("【{}】编译失败...【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
@@ -137,9 +165,9 @@ public class CodeCovServiceImpl implements CodeCovService {
             }
         }
         DeployInfoEntity deployInfoEntity = deployInfoEntityBuild(coverageReportEntity, buffer.toString());
-        log.info("【更新部署表信息内容入参：{}】",deployInfoEntity);
+        log.info("【更新部署表信息内容入参：{}】", deployInfoEntity);
         Integer updateDeployment = deployInfoDao.updateDeployInfoByUuid(deployInfoEntity);
-        log.info("【更新部署表信息内容成功返回值：{}】",updateDeployment);
+        log.info("【更新部署表信息内容成功返回值：{}】", updateDeployment);
     }
 
     private CoverageReportEntity coverageReportEntityBuild(EnvCoverRequest envCoverRequest) {

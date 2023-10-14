@@ -98,7 +98,6 @@ public class JDiffFiles {
             } else {
                 coverageReport.setRequestStatus(JobStatusEnum.DIFF_METHOD_DONE.getCode());
             }
-            return stringHashMap;
         } catch (IOException e) {
             log.error("【读取文件出现失败...失败原因：{}】", e.getMessage());
             coverageReport.setRequestStatus(JobStatusEnum.DIFF_METHOD_FAIL.getCode());
@@ -106,7 +105,7 @@ public class JDiffFiles {
             log.error("【Git操作失败...失败原因是：{}】", e.getMessage());
             coverageReport.setRequestStatus(JobStatusEnum.DIFF_METHOD_FAIL.getCode());
         }
-        return null;
+        return stringHashMap;
     }
 
 
