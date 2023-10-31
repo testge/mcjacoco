@@ -16,5 +16,8 @@ public class AddressConstants {
 
     public static final String NO_CODE_COVERGET_REPORT = LocalIpUtil.getBaseUrl() + "nodiffcode.html";
 
+    public static final String REPORT_PATH = System.getProperty("user.home") + "/report/";
+
+    // Jacoco-Cli包存放地址
     public static final String JACOCO_PATH = System.getProperty("user.home") + "/jacocoJar/org.jacoco.cli-1.0.2-SNAPSHOT-nodeps.jar";
 }

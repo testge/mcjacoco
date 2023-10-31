@@ -52,13 +52,6 @@ public class CmdExecutor {
         try {
             // 将执行命令转化字符串
             String buffer = Arrays.stream(values).collect(Collectors.joining());
-//            StringBuffer buffer = new StringBuffer();
-//            for (int i = 0; i < values.length; i++) {
-//                buffer.append(values[i]);
-//                if (i < values.length - 1) {
-//                    buffer.append(" && ");
-//                }
-//            }
             log.info("【cmdExecutor：{}】", executor);
             // 当核心线程数大于最大线程数发出警告
             if (executor.getPoolSize() > maxThread) {
@@ -90,28 +83,6 @@ public class CmdExecutor {
                 proces.destroyForcibly();
             }
         }
-
-    }
-
-    public static void main(String[] args) throws IOException {
-//        String mvn = "cd /Users/luping/app/mcs_jacoco/clonecode/101000000170035/feature_newtest02&&mvn clean compile >>/Users/luping/report/logs/101000000170035.log";
-//        ProcessBuilder builder = new ProcessBuilder();
-////        builder.command(new String[]{"bash", "-c", mvn});
-//        builder.command(new String[]{"bash", "-c", "echo $PATH"});
-//        builder.redirectErrorStream(true);
-//        Process process = builder.start();
-//        String result = IOUtils.toString(process.getInputStream());
-//        System.out.println(result);
-
-//        File file = new File("/Users/luping/app/mcs_jacoco/clonecode/101000000170036/feature_newtest02");
-//        String [] fileName = file.list();
-//        File [] files = file.listFiles();
-//        System.out.println(fileName.length);
-//        for (String name:fileName){
-//            if (!name.startsWith(".")){
-//                System.out.println(name);
-//            }
-//        }
 
     }
 

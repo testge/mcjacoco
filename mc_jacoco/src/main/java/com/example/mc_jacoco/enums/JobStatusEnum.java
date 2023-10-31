@@ -16,6 +16,8 @@ public enum JobStatusEnum {
     CLONE_FAIL(202, "下载代码失败"),
     COMPILE_FAIL(203, "编译失败"),
     DIFF_METHOD_FAIL(204, "计算增量方法失败"),
+    SUCCESS(200, "执行成功"),
+    ENVREPORT_FAIL(212, "统计功能测试增量覆盖率失败"),
     ;
 
 

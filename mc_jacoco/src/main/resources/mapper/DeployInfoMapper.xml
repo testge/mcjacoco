@@ -20,8 +20,7 @@
     </resultMap>
 
     <sql id="deployInfo">
-        id
-        ,job_record_uuid,giturl,code_path,base_version,address,port,child_modules,type
+        id,job_record_uuid,code_path,address,port,child_modules
     </sql>
     <!--  新增服务部署数据  -->
     <insert id="insertDeployInfo">
@@ -50,8 +49,7 @@
     </update>
 
     <select id="queryDeployInfoByUuid" resultType="com.example.mc_jacoco.entity.po.DeployInfoEntity">
-        SELECT
-        <include refid="deployInfo"/>
+        SELECT *
         from diff_deploy_info where job_record_uuid = #{uuid,jdbcType=VARCHAR}
     </select>
 </mapper>

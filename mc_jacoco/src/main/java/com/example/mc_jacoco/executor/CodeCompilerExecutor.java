@@ -1,6 +1,7 @@
 package com.example.mc_jacoco.executor;
 
 import com.example.mc_jacoco.constants.AddressConstants;
+import com.example.mc_jacoco.constants.NumberConstants;
 import com.example.mc_jacoco.entity.dto.CoverageReportDto;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.util.FilesUtil;
@@ -32,7 +33,7 @@ public class CodeCompilerExecutor {
         String[] compileCmd = new String[]{"cd " + coverageReportDto.getNowLocalPathProject() + "&&mvn clean compile " +
                 (StringUtils.isEmpty(coverageReportDto.getEnvType()) ? "" : "-p=" + coverageReportDto.getEnvType()) + ">>" + logFile};
         try {
-            Integer cmdExecutor = CmdExecutor.cmdExecutor(compileCmd, 600000L);
+            Integer cmdExecutor = CmdExecutor.cmdExecutor(compileCmd, NumberConstants.CMD_TIMEOUT);
             log.info("【cmd编译返回结果：{}】", cmdExecutor);
             if (cmdExecutor != 0) {
                 coverageReportDto.setRequestStatus(JobStatusEnum.COMPILE_FAIL.getCode());

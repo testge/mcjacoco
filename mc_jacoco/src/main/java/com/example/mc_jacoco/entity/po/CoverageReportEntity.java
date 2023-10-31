@@ -146,6 +146,8 @@ public class CoverageReportEntity {
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", envType='" + envType + '\'' +
+                ", nowLocalPathProject='" + nowLocalPathProject + '\'' +
+                ", baseLocalPathProject='" + baseLocalPathProject + '\'' +
                 '}';
     }
 }
