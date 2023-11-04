@@ -18,6 +18,7 @@ public enum JobStatusEnum {
     DIFF_METHOD_FAIL(204, "计算增量方法失败"),
     SUCCESS(200, "执行成功"),
     ENVREPORT_FAIL(212, "统计功能测试增量覆盖率失败"),
+    COVHTML_FAIL(213, "覆盖率报告合并失败"),
     ;
 
 

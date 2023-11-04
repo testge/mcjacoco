@@ -19,6 +19,7 @@ import com.example.mc_jacoco.service.CodeCovService;
 import com.example.mc_jacoco.util.DoubleUtil;
 import com.example.mc_jacoco.util.LocalIpUtil;
 import com.example.mc_jacoco.util.MavenModuleUtil;
+import com.example.mc_jacoco.util.MergeReportHtml;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -90,7 +91,8 @@ public class CodeCovServiceImpl implements CodeCovService {
                 calculateEnvCov(coverageReportEntity);
             }).start();
         } catch (Exception e) {
-            log.error(e.getMessage());
+            log.error("【收集覆盖率失败...原因：{}】", e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -135,13 +137,15 @@ public class CodeCovServiceImpl implements CodeCovService {
                     AddressConstants.JACOCO_PATH + " dump --address " + deployInfoEntity.getAddress() + " --port " + deployInfoEntity.getPort() +
                     " --destfile " + coverageReportEntity.getNowLocalPathProject() + "/jacoco.exec"}, NumberConstants.CMD_TIMEOUT);
             if (executeCmd == 0) {
+                String nowLocalJacocoExec = coverageReportEntity.getNowLocalPathProject() + "/jacoco.exec";
+                log.info("【覆盖率Dump路径：{}】", nowLocalJacocoExec);
                 // 根据UUid删除报告文件
-//                CmdExecutor.cmdExecutor(new String[]{"rm -rf " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
+                CmdExecutor.cmdExecutor(new String[]{"rm -rf " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
                 String[] moduleList = new String[]{};
                 if (deployInfoEntity.getChildModules() != null) {
                     moduleList = deployInfoEntity.getChildModules().split(",");
                 }
-                StringBuffer buffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report " + coverageReportEntity.getNowLocalPathProject() + "/jacoco.exec");
+                StringBuffer buffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report " + nowLocalJacocoExec);
                 if (moduleList.length == 0) {
                     buffer.append(" --sourcefiles ./src/main/java/ ");
                     buffer.append(" --classfiles ./target/classes/com/ ");
@@ -158,6 +162,7 @@ public class CodeCovServiceImpl implements CodeCovService {
                 }
                 buffer.append(" --html ./jacocoreport/ --encoding utf-8 --name " + reportName + ">>" + logFile);
                 int covExitCode = CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + buffer.toString()}, NumberConstants.CMD_TIMEOUT);
+                // 加载项目下的index.html文件
                 File covFile = new File(coverageReportEntity.getNowLocalPathProject() + "/jacocoreport/index.html");
                 if (covExitCode == 0 && covFile.isFile()) {
                     log.info("【增量覆盖率HTML文件生成成功】【地址：{}】", covFile.getAbsolutePath());
@@ -183,23 +188,21 @@ public class CodeCovServiceImpl implements CodeCovService {
                             lineCoverage = (lineDenominator - lineMolecule) / lineDenominator * 100;
                             log.info("【行覆盖率计算结果是：{}】", lineCoverage);
                             String[] barString = bars.get(1).text().split(" of ");
-                            System.out.println("barString");
-                            System.out.println(barString[0]);
-                            System.out.println(barString[1]);
                             // 获取分支的未覆盖数
                             double branchMolecule = Double.parseDouble(barString[0]);
                             log.info("【branchMolecule结果是：{}】", branchMolecule);
                             // 获取分支的全部总数
                             double branchDenominator = Double.parseDouble(barString[1]);
                             log.info("【branchDenominator结果是：{}】", branchDenominator);
-                            // 计算分支覆盖率
+                            // 计算分支覆盖率，如果总分支数<=0的时候，意味着覆盖率报告是没有分支数据的，默认赋值为0
                             if (branchDenominator > 0.0) {
                                 branchCoverage = (branchDenominator - branchMolecule) / branchDenominator * 100;
                             } else {
-                                branchCoverage = 100;
+                                branchCoverage = 0;
                             }
                             log.info("【分支覆盖率计算结果是：{}】", branchCoverage);
                         }
+                        // 将生成的覆盖率报告拷贝到，根目录下的report目录中
                         String[] cpReportCmd = new String[]{"cp -rf " + covFile.getParent() + " " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid() + "/"};
                         CmdExecutor.cmdExecutor(cpReportCmd, NumberConstants.CMD_TIMEOUT);
                         coverageReportEntity.setReportUrl(LocalIpUtil.getBaseUrl() + coverageReportEntity.getJobRecordUuid() + "/index.html");
@@ -211,15 +214,64 @@ public class CodeCovServiceImpl implements CodeCovService {
                         coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
                         coverageReportEntity.setErrMsg("覆盖率报告文件解析失败...");
                         log.error("【解析jacoco报告失败】【失败原因：{}】", e.getMessage());
+                        throw new RuntimeException("【覆盖率报告文件解析失败...原因：】：" + e.getMessage());
+                    }
+                } else {
+                    // 覆盖率生成失败后考虑到是多module情况，重新针对每个module生成覆盖率，将覆盖率的报告进行合并
+                    coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
+                    int littleExitCode = 0;
+                    ArrayList<String> childReportList = new ArrayList<>();
+                    for (String module : moduleList) {
+                        StringBuffer moduleBuffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report ./jacoco.exec");
+                        moduleBuffer.append(" --sourcefiles ./" + module + "/src/main/java/");
+                        moduleBuffer.append(" --classfiles ./" + module + "/target/classes/com/");
+                        if (!StringUtils.isEmpty(coverageReportEntity.getDiffMethod())) {
+                            moduleBuffer.append(" --diffFile " + coverageReportEntity.getDiffMethod());
+                        }
+                        moduleBuffer.append(" --html jacocoreport/" + module + " --encoding utf-8 --name " + reportName + ">>" + logFile);
+                        littleExitCode += CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + moduleBuffer.toString()}, NumberConstants.CMD_TIMEOUT);
+                        // 每个module生成的覆盖率报告地址
+                        String moduleReport = coverageReportEntity.getNowLocalPathProject() + "/jacocoreport/" + module + "/index.html";
+                        log.info("【Module生成的覆盖率报告地址：{}】", moduleReport);
+                        if (littleExitCode == 0) {
+                            // 将每个module的覆盖率报告文件加入到childReportList
+                            childReportList.add(moduleReport);
+                        }
+                    }
+                    // 将覆盖率报告进行合并
+                    if (littleExitCode == 0) {
+                        // 将覆盖率的报告全部拷贝到根目录下的文件里
+                        CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + "cp -rf jacocoreport" + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
+                        Integer[] result = MergeReportHtml.mergerHtml(childReportList, AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid() + "/index.html");
+                        if (result[0] == 1) {
+                            // 将图像拷贝JacocoSource路径下
+                            CmdExecutor.cmdExecutor(new String[]{"cp -r " + AddressConstants.JACOCO_RESOURE_PATH + " " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
+                            coverageReportEntity.setReportUrl(LocalIpUtil.getBaseUrl() + coverageReportEntity.getJobRecordUuid() + "/index.html");
+                            coverageReportEntity.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
+                            coverageReportEntity.setLineCoverage(Double.valueOf(result[2]));
+                            coverageReportEntity.setBranchCoverage(Double.valueOf(result[1]));
+                        } else {
+                            log.error("【覆盖率生成失败...】");
+                            coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
+                            coverageReportEntity.setErrMsg("覆盖率报告生成失败...");
+                        }
+                    } else {
+                        log.error("【覆盖率报告合并失败...】");
+                        coverageReportEntity.setRequestStatus(JobStatusEnum.COVHTML_FAIL.getCode());
+                        coverageReportEntity.setErrMsg("覆盖率报告合并失败...");
                     }
                 }
+            } else {
+                log.error("【解析Jacoco.exec文件失败...】");
+                coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
+                coverageReportEntity.setErrMsg("解析Jacoco.exec文件失败...");
             }
         } catch (Exception e) {
             log.error("【计算覆盖率失败...】【失败原因：{}】", e.getMessage());
+            throw new RuntimeException(e.getMessage());
         } finally {
             coverageReportDao.updateCoverageReportById(coverageReportEntity);
         }
-
     }
 
     /**

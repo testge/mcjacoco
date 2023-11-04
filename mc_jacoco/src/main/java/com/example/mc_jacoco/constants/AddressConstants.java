@@ -20,4 +20,7 @@ public class AddressConstants {
 
     // Jacoco-Cli包存放地址
     public static final String JACOCO_PATH = System.getProperty("user.home") + "/jacocoJar/org.jacoco.cli-1.0.2-SNAPSHOT-nodeps.jar";
+
+    // Jacoco图像路径
+    public static final String JACOCO_RESOURE_PATH =System.getProperty("user.home")+ "/resource/jacoco-resources";
 }

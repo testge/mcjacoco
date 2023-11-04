@@ -13,7 +13,7 @@ public class LocalIpUtil {
         StringBuilder sb = new StringBuilder();
         try {
             String localIp = GetIPAddressUtil.getLinuxIpAddress();
-            sb.append("http://").append(localIp).append(":8899/");
+            sb.append("http://").append(localIp).append(":8081/");
             return sb.toString();
         } catch (Exception e) {
             log.error("【获取本机机器ip出现异常...】【异常原因：{}】",e.getMessage());
