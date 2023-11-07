@@ -23,7 +23,6 @@ import com.example.mc_jacoco.util.MergeReportHtml;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -221,44 +220,50 @@ public class CodeCovServiceImpl implements CodeCovService {
                     coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
                     int littleExitCode = 0;
                     ArrayList<String> childReportList = new ArrayList<>();
-                    for (String module : moduleList) {
-                        StringBuffer moduleBuffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report ./jacoco.exec");
-                        moduleBuffer.append(" --sourcefiles ./" + module + "/src/main/java/");
-                        moduleBuffer.append(" --classfiles ./" + module + "/target/classes/com/");
-                        if (!StringUtils.isEmpty(coverageReportEntity.getDiffMethod())) {
-                            moduleBuffer.append(" --diffFile " + coverageReportEntity.getDiffMethod());
+                    if (!(moduleList.length == 0)){
+                        for (String module : moduleList) {
+                            StringBuffer moduleBuffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report ./jacoco.exec");
+                            moduleBuffer.append(" --sourcefiles ./" + module + "/src/main/java/");
+                            moduleBuffer.append(" --classfiles ./" + module + "/target/classes/com/");
+                            if (!StringUtils.isEmpty(coverageReportEntity.getDiffMethod())) {
+                                moduleBuffer.append(" --diffFile " + coverageReportEntity.getDiffMethod());
+                            }
+                            moduleBuffer.append(" --html jacocoreport/" + module + " --encoding utf-8 --name " + reportName + ">>" + logFile);
+                            littleExitCode += CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + moduleBuffer.toString()}, NumberConstants.CMD_TIMEOUT);
+                            // 每个module生成的覆盖率报告地址
+                            String moduleReport = coverageReportEntity.getNowLocalPathProject() + "/jacocoreport/" + module + "/index.html";
+                            log.info("【Module生成的覆盖率报告地址：{}】", moduleReport);
+                            if (littleExitCode == 0) {
+                                // 将每个module的覆盖率报告文件加入到childReportList
+                                childReportList.add(moduleReport);
+                            }
                         }
-                        moduleBuffer.append(" --html jacocoreport/" + module + " --encoding utf-8 --name " + reportName + ">>" + logFile);
-                        littleExitCode += CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + moduleBuffer.toString()}, NumberConstants.CMD_TIMEOUT);
-                        // 每个module生成的覆盖率报告地址
-                        String moduleReport = coverageReportEntity.getNowLocalPathProject() + "/jacocoreport/" + module + "/index.html";
-                        log.info("【Module生成的覆盖率报告地址：{}】", moduleReport);
+                        // 将覆盖率报告进行合并
                         if (littleExitCode == 0) {
-                            // 将每个module的覆盖率报告文件加入到childReportList
-                            childReportList.add(moduleReport);
-                        }
-                    }
-                    // 将覆盖率报告进行合并
-                    if (littleExitCode == 0) {
-                        // 将覆盖率的报告全部拷贝到根目录下的文件里
-                        CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + "cp -rf jacocoreport" + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
-                        Integer[] result = MergeReportHtml.mergerHtml(childReportList, AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid() + "/index.html");
-                        if (result[0] == 1) {
-                            // 将图像拷贝JacocoSource路径下
-                            CmdExecutor.cmdExecutor(new String[]{"cp -r " + AddressConstants.JACOCO_RESOURE_PATH + " " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
-                            coverageReportEntity.setReportUrl(LocalIpUtil.getBaseUrl() + coverageReportEntity.getJobRecordUuid() + "/index.html");
-                            coverageReportEntity.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
-                            coverageReportEntity.setLineCoverage(Double.valueOf(result[2]));
-                            coverageReportEntity.setBranchCoverage(Double.valueOf(result[1]));
+                            // 将覆盖率的报告全部拷贝到根目录下的文件里
+                            CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + "cp -rf jacocoreport" + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
+                            Integer[] result = MergeReportHtml.mergerHtml(childReportList, AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid() + "/index.html");
+                            if (result[0] == 1) {
+                                // 将图像拷贝JacocoSource路径下
+                                CmdExecutor.cmdExecutor(new String[]{"cp -r " + AddressConstants.JACOCO_RESOURE_PATH + " " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
+                                coverageReportEntity.setReportUrl(LocalIpUtil.getBaseUrl() + coverageReportEntity.getJobRecordUuid() + "/index.html");
+                                coverageReportEntity.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
+                                coverageReportEntity.setLineCoverage(Double.valueOf(result[2]));
+                                coverageReportEntity.setBranchCoverage(Double.valueOf(result[1]));
+                            } else {
+                                log.error("【覆盖率生成失败...】");
+                                coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
+                                coverageReportEntity.setErrMsg("覆盖率报告生成失败...");
+                            }
                         } else {
-                            log.error("【覆盖率生成失败...】");
-                            coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
-                            coverageReportEntity.setErrMsg("覆盖率报告生成失败...");
+                            log.error("【覆盖率报告合并失败...】");
+                            coverageReportEntity.setRequestStatus(JobStatusEnum.COVHTML_FAIL.getCode());
+                            coverageReportEntity.setErrMsg("覆盖率报告合并失败...");
                         }
-                    } else {
-                        log.error("【覆盖率报告合并失败...】");
-                        coverageReportEntity.setRequestStatus(JobStatusEnum.COVHTML_FAIL.getCode());
-                        coverageReportEntity.setErrMsg("覆盖率报告合并失败...");
+                    }else {
+                        log.error("【单模块覆盖率生成失败...】");
+                        coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
+                        coverageReportEntity.setErrMsg("单模块覆盖率生成失败...");
                     }
                 }
             } else {
