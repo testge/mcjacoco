@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--接口和映射文件相对应-->
+<mapper namespace="com.example.mc_jacoco.dao.DiffDeployInfoDao">
+    <resultMap id="diffDeployinfo" type="com.example.mc_jacoco.entity.po.DeployInfoEntity">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="job_record_uuid" property="uuid" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="port" property="port" jdbcType="VARCHAR"/>
+        <result column="code_path" property="codePath" jdbcType="VARCHAR"/>
+        <result column="child_modules" property="childModules" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="DATE"/>
+        <result column="update_time" property="updateTime" jdbcType="DATE"/>
+    </resultMap>
+
+    <sql id="deployInfo">
+        id,job_record_uuid as uuid,address,port,code_path as codePath,child_modules as childModules
+    </sql>
+
+    <select id="queryInfoById" resultType="com.example.mc_jacoco.entity.po.DeployInfoEntity">
+        SELECT <include refid="deployInfo"/> from diff_deploy_info where job_record_uuid = #{jobRecordUUid,jdbcType=VARCHAR}
+    </select>
+</mapper>

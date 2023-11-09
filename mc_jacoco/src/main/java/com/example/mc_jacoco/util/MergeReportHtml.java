@@ -10,7 +10,7 @@ import org.jsoup.select.Elements;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author luping
@@ -26,7 +26,8 @@ public class MergeReportHtml {
      * @param filePath  根路径的报告地址
      * @return
      */
-    public static Integer[] mergerHtml(ArrayList<String> listFiles, String filePath) {
+    public static Integer[] mergerHtml(List<String> listFiles, String filePath) {
+        log.info("【覆盖率HTML报告合并，报告数据：{},文件地址：{}】",listFiles,filePath);
         Integer[] result = new Integer[3];
         result[0] = 0;
         result[1] = -1;
@@ -54,6 +55,7 @@ public class MergeReportHtml {
                 File file = new File(fileName);
                 String moduleName = new File(file.getParent()).getName();
                 Document docc = Jsoup.parse(new File(fileName), "UTF-8", "");
+                // 将所有的href标签增加模块名，通过路径可以访问到每个模块的inedex.html文件
                 Document doc = Jsoup.parse(docc.toString().replace("<a href=\"", "<a href=\"" + moduleName + "/"));
                 // 覆盖率报告文件中tbody标签为空，表示没有覆盖率数据
                 if (doc.getElementsByTag("tbody") == null) {
@@ -112,7 +114,7 @@ public class MergeReportHtml {
             String tfootTemplate = covHtmlTfootTemplate(array);
             element.getElementsByTag("tfoot").first().append(tfootTemplate);
             FileWriter writer = new FileWriter(filePath);
-            writer.write(element.toString());
+            writer.write(docSchema.toString());
             writer.flush();
             // 表示覆盖率生成成功
             result[0] = 1;

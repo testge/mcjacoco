@@ -4,6 +4,7 @@ import com.example.mc_jacoco.constants.AddressConstants;
 import com.example.mc_jacoco.constants.NumberConstants;
 import com.example.mc_jacoco.dao.CoverageReportDao;
 import com.example.mc_jacoco.dao.DeployInfoDao;
+import com.example.mc_jacoco.dao.DiffDeployInfoDao;
 import com.example.mc_jacoco.entity.dto.CoverageReportDto;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.po.DeployInfoEntity;
@@ -30,7 +31,10 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -46,6 +50,9 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     @Resource
     private DeployInfoDao deployInfoDao;
+
+    @Resource
+    private DiffDeployInfoDao diffDeployInfoDao;
 
     @Resource
     private CodeCloneExecutor codeCloneExecutor;
@@ -121,7 +128,7 @@ public class CodeCovServiceImpl implements CodeCovService {
         // 执行日志地址
         String logFile = coverageReportEntity.getLog_file().replace(LocalIpUtil.getBaseUrl() + "logs/", AddressConstants.LOG_PATH);
         String uuid = coverageReportEntity.getJobRecordUuid();
-        DeployInfoEntity deployInfoEntity = deployInfoDao.queryDeployInfoByUuid(uuid);
+        DeployInfoEntity deployInfoEntity = diffDeployInfoDao.queryInfoById(uuid);
         log.info("【查询机器信息结果：{}】", deployInfoEntity.toString());
         // 根据是增量覆盖率还是全部覆盖率，设置报告名称
         String reportName;
@@ -149,10 +156,10 @@ public class CodeCovServiceImpl implements CodeCovService {
                     buffer.append(" --sourcefiles ./src/main/java/ ");
                     buffer.append(" --classfiles ./target/classes/com/ ");
                 } else {
-                    // TODO 多module处理路径
+                    log.info("【开始计算多module覆盖率....】");
                     for (String module : moduleList) {
-                        buffer.append(" --sourcefiles ./" + module + "src/main/java/ ");
-                        buffer.append(" --classfiles ./" + module + "target/classes/com/ ");
+                        buffer.append(" --sourcefiles ./" + module + "/src/main/java/ ");
+                        buffer.append(" --classfiles ./" + module + "/target/classes/com/ ");
                     }
                 }
                 // 执行jacoco获取exec文件时，增加Diff方法集合参数，用于后面计算增量方法覆盖率使用
@@ -219,8 +226,9 @@ public class CodeCovServiceImpl implements CodeCovService {
                     // 覆盖率生成失败后考虑到是多module情况，重新针对每个module生成覆盖率，将覆盖率的报告进行合并
                     coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
                     int littleExitCode = 0;
-                    ArrayList<String> childReportList = new ArrayList<>();
-                    if (!(moduleList.length == 0)){
+                    List<String> childReportList = new ArrayList<>();
+                    if (!(moduleList.length == 0)) {
+                        log.info("【多module分开计算覆盖率】【多module列表：{}】", Arrays.asList(moduleList));
                         for (String module : moduleList) {
                             StringBuffer moduleBuffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report ./jacoco.exec");
                             moduleBuffer.append(" --sourcefiles ./" + module + "/src/main/java/");
@@ -238,14 +246,15 @@ public class CodeCovServiceImpl implements CodeCovService {
                                 childReportList.add(moduleReport);
                             }
                         }
+                        log.info("【多module覆盖率报告数据：{}】", childReportList);
                         // 将覆盖率报告进行合并
                         if (littleExitCode == 0) {
                             // 将覆盖率的报告全部拷贝到根目录下的文件里
-                            CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + "cp -rf jacocoreport" + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
+                            CmdExecutor.cmdExecutor(new String[]{"cd " + coverageReportEntity.getNowLocalPathProject() + "&&" + "cp -rf jacocoreport " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid() + "/"}, NumberConstants.CMD_TIMEOUT);
                             Integer[] result = MergeReportHtml.mergerHtml(childReportList, AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid() + "/index.html");
                             if (result[0] == 1) {
                                 // 将图像拷贝JacocoSource路径下
-                                CmdExecutor.cmdExecutor(new String[]{"cp -r " + AddressConstants.JACOCO_RESOURE_PATH + " " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
+                                CmdExecutor.cmdExecutor(new String[]{"cp -r " + AddressConstants.JACOCO_RESOURE_PATH + "/" + " " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid()}, NumberConstants.CMD_TIMEOUT);
                                 coverageReportEntity.setReportUrl(LocalIpUtil.getBaseUrl() + coverageReportEntity.getJobRecordUuid() + "/index.html");
                                 coverageReportEntity.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
                                 coverageReportEntity.setLineCoverage(Double.valueOf(result[2]));
@@ -260,7 +269,7 @@ public class CodeCovServiceImpl implements CodeCovService {
                             coverageReportEntity.setRequestStatus(JobStatusEnum.COVHTML_FAIL.getCode());
                             coverageReportEntity.setErrMsg("覆盖率报告合并失败...");
                         }
-                    }else {
+                    } else {
                         log.error("【单模块覆盖率生成失败...】");
                         coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
                         coverageReportEntity.setErrMsg("单模块覆盖率生成失败...");
@@ -272,6 +281,8 @@ public class CodeCovServiceImpl implements CodeCovService {
                 coverageReportEntity.setErrMsg("解析Jacoco.exec文件失败...");
             }
         } catch (Exception e) {
+            coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
+            coverageReportEntity.setErrMsg("计算覆盖率失败...");
             log.error("【计算覆盖率失败...】【失败原因：{}】", e.getMessage());
             throw new RuntimeException(e.getMessage());
         } finally {
