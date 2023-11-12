@@ -19,6 +19,8 @@ public enum JobStatusEnum {
     SUCCESS(200, "执行成功"),
     ENVREPORT_FAIL(212, "统计功能测试增量覆盖率失败"),
     COVHTML_FAIL(213, "覆盖率报告合并失败"),
+    COVERGER_RESULT_SUCCESS_MSG (1,"覆盖率信息查询成功"),
+    COVERGER_RESULT_FAIL_MSG (0,"覆盖率信息查询成功"),
     ;
 
 

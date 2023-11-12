@@ -2,6 +2,7 @@ package com.example.mc_jacoco.service;
 
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
+import com.example.mc_jacoco.entity.vo.ResultReponse;
 
 /**
  * @author luping
@@ -25,4 +26,6 @@ public interface CodeCovService {
      * @param coverageReportEntity
      */
     void calculateEnvCov(CoverageReportEntity coverageReportEntity);
+
+    ResultReponse getResultEnvCover(String uuid);
 }

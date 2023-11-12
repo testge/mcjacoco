@@ -9,6 +9,7 @@ import com.example.mc_jacoco.entity.dto.CoverageReportDto;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.po.DeployInfoEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
+import com.example.mc_jacoco.entity.vo.ResultReponse;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.enums.ReportTypeEnum;
@@ -21,6 +22,7 @@ import com.example.mc_jacoco.util.DoubleUtil;
 import com.example.mc_jacoco.util.LocalIpUtil;
 import com.example.mc_jacoco.util.MavenModuleUtil;
 import com.example.mc_jacoco.util.MergeReportHtml;
+import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -287,6 +289,22 @@ public class CodeCovServiceImpl implements CodeCovService {
             throw new RuntimeException(e.getMessage());
         } finally {
             coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        }
+    }
+
+    @Override
+    public ResultReponse getResultEnvCover(String uuid) {
+        CoverageReportEntity coverageReport = coverageReportDao.queryCoverageReportByUuid(uuid);
+        log.info("【getResultEnvCover方法-查询覆盖率信息结果：{}】", coverageReport);
+        ResultReponse resultReponse = new ResultReponse();
+        if (coverageReport != null){
+            BeanUtils.copyProperties(coverageReport, resultReponse);
+            resultReponse.setCoverageCode(coverageReport.getRequestStatus());
+            resultReponse.setCoverageMsg(StringUtils.isEmpty(coverageReport.getErrMsg()) ? JobStatusEnum.COVERGER_RESULT_SUCCESS_MSG.getCodeMsg() : coverageReport.getErrMsg());
+            log.info("【getResultEnvCover方法-返回覆盖率信息结果：{}】",resultReponse);
+            return resultReponse;
+        }else {
+            return ResultReponse.ResultReponseFailBuid("uuid不存在");
         }
     }
 

@@ -25,4 +25,6 @@ public interface CoverageReportDao {
      */
     Integer updateCoverageReportById(@Param("coverageReportEntity") CoverageReportEntity coverageReportEntity);
 
+    CoverageReportEntity queryCoverageReportByUuid(@Param("uuid") String uuid);
+
 }

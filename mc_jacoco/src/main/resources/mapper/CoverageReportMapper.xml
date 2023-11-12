@@ -27,6 +27,11 @@
         <result column="update_time" property="updateTime" jdbcType="DATE"/>
     </resultMap>
 
+    <sql id="coverageReport">
+        id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,line_coverage,branch_coverage,
+            err_msg,sub_module,`from`,now_local_path,base_local_path,log_file
+    </sql>
+
     <!--  保存覆盖率数据  -->
     <insert id="insertCoverageReportById" parameterType="com.example.mc_jacoco.entity.po.CoverageReportEntity">
         INSERT INTO diff_coverage_report(`from`, `job_record_uuid`, `giturl`, `now_version`, `base_version`, `type`,
@@ -96,5 +101,12 @@
         </set>
         where job_record_uuid = #{coverageReportEntity.jobRecordUuid,jdbcType=VARCHAR}
     </update>
+    <!--  根据UUid查询覆盖率信息  -->
+    <select id="queryCoverageReportByUuid" resultMap="coverageReportEntity">
+        SELECT
+        <include refid="coverageReport"/>
+        FROM diff_coverage_report
+        where job_record_uuid = #{uuid,jdbcType=VARCHAR}
+    </select>
 
 </mapper>
