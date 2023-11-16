@@ -1,6 +1,7 @@
 package com.example.mc_jacoco.controller;
 
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
+import com.example.mc_jacoco.entity.vo.LocalHostRequest;
 import com.example.mc_jacoco.entity.vo.ResultReponse;
 import com.example.mc_jacoco.service.CodeCovService;
 import com.example.mc_jacoco.util.Result;
@@ -12,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 
 /**
  * @author luping
@@ -53,5 +55,17 @@ public class CoverController {
         } else {
             return Result.success(codeCovService.getResultEnvCover(uuid));
         }
+    }
+
+    /**
+     *  手动获取env增量代码覆盖率，代码部署和覆盖率服务在同一机器上，可直接读取本机源码和本机class文件
+     * @param localHostRequest
+     * @return
+     */
+    @RequestMapping(value = "/getEnvCoverResult",method = RequestMethod.POST,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public Result<ResultReponse> getEnvLocalCoverResult(@RequestBody @Valid LocalHostRequest localHostRequest){
+        log.info("【手工触发计算覆盖率...】");
+        return Result.success(codeCovService.getLocalCoverResult(localHostRequest));
     }
 }

@@ -37,6 +37,7 @@ public class MethodParserUtil {
      * @return
      */
     public  HashMap<String, String> parseMethodsMd5(String fileName) {
+        log.info("【解析Java文件入参：{}】",fileName);
         methodMd5Map = new HashMap<>();
         try {
             FileInputStream inputStream = new FileInputStream(fileName);

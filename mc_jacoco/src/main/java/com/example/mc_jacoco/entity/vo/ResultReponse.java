@@ -66,4 +66,15 @@ public class ResultReponse {
         resultReponse.setLog_file("");
         return resultReponse;
     }
+
+    public static ResultReponse ResultReponseFailBuid(String msg,Integer code){
+        ResultReponse resultReponse = new ResultReponse();
+        resultReponse.setCoverageCode(code);
+        resultReponse.setCoverageMsg(msg);
+        resultReponse.setLineCoverage(Double.parseDouble("-1"));
+        resultReponse.setBranchCoverage(Double.parseDouble("-1"));
+        resultReponse.setReportUrl("");
+        resultReponse.setLog_file("");
+        return resultReponse;
+    }
 }

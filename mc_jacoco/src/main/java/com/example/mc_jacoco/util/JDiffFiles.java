@@ -63,17 +63,17 @@ public class JDiffFiles {
                 if (diff.getNewPath().endsWith(".java")) {
                     String nowClassPath = diff.getNewPath();
                     if (diff.getChangeType() == DiffEntry.ChangeType.ADD) {
-                        log.info("【存在新增源文件：{}】",nowClassPath);
+                        log.info("【存在新增源文件：{}】", nowClassPath);
                         stringHashMap.put(nowClassPath.replace(".java", ""), "true");
                     } else if (diff.getChangeType() == DiffEntry.ChangeType.MODIFY) {
-                        log.info("【存在修改源文件：{}】",nowClassPath);
+                        log.info("【存在修改源文件：{}】", nowClassPath);
                         MethodParserUtil methodParserUtil = new MethodParserUtil();
                         // 获取原基础java文件的方法名、方法入参子节点
                         HashMap<String, String> baseMMap = methodParserUtil.parseMethodsMd5(oldGit.getRepository().getDirectory().getParent() + "/" + nowClassPath);
                         // 获取当前分支java文件的方法名、方法入参子节点
                         HashMap<String, String> newMMap = methodParserUtil.parseMethodsMd5(newGit.getRepository().getDirectory().getParent() + "/" + nowClassPath);
                         HashMap<String, String> methodsMap = diffMethods(baseMMap, newMMap);
-                        log.info("【基准分支与对比分支的差异化方法是：{}】",methodsMap);
+                        log.info("【基准分支与对比分支的差异化方法是：{}】", methodsMap);
                         if (!methodsMap.isEmpty()) {
                             StringBuffer buffer = new StringBuffer();
                             for (String st : methodsMap.values()) {
@@ -106,6 +106,64 @@ public class JDiffFiles {
             coverageReport.setRequestStatus(JobStatusEnum.DIFF_METHOD_FAIL.getCode());
         }
         return stringHashMap;
+    }
+
+    public static HashMap<String, String> diffMethodsListForEnv(String basePath, String nowPath, String baseVersion, String nowVersion) {
+        log.info("【计算增量方法入参：{}--{}--{}--{}】", basePath, nowPath, baseVersion, nowVersion);
+        HashMap<String, String> hashMap = new HashMap<>();
+        try {
+            File baseFile = new File(basePath);
+            File nowFile = new File(nowPath);
+            Git baseGit;
+            Git nowGit;
+            Repository baseRepository;
+            Repository nowRepository;
+            baseGit = Git.open(baseFile);
+            nowGit = Git.open(nowFile);
+            baseRepository = baseGit.getRepository();
+            nowRepository = nowGit.getRepository();
+            ObjectId baseObjectId = baseRepository.resolve(baseVersion);
+            ObjectId nowObjectId = nowRepository.resolve(nowVersion);
+            AbstractTreeIterator baseTree = prepareTreeParser(baseRepository, baseObjectId);
+            AbstractTreeIterator nowTree = prepareTreeParser(nowRepository, nowObjectId);
+            List<DiffEntry> diffEntryList = nowGit.diff().setOldTree(baseTree).setNewTree(nowTree).setShowNameAndStatusOnly(true).call();
+            for (DiffEntry diffEntry : diffEntryList) {
+                // 文件是删除类型，直接忽略
+                if (diffEntry.getChangeType() == DiffEntry.ChangeType.DELETE) {
+                    continue;
+                }
+                if (diffEntry.getNewPath().contains("src/test/java")) {
+                    continue;
+                }
+                if (diffEntry.getNewPath().endsWith(".java")) {
+                    String nowLocalPath = diffEntry.getNewPath();
+                    log.info("【Java文件路径：{}】", nowLocalPath);
+                    if (diffEntry.getChangeType() == DiffEntry.ChangeType.ADD) {
+                        hashMap.put(nowLocalPath.replace(".java", ""), "true");
+                    }
+                    if (diffEntry.getChangeType() == DiffEntry.ChangeType.MODIFY) {
+                        MethodParserUtil methodParserUtil = new MethodParserUtil();
+                        HashMap<String, String> baseHashMap = methodParserUtil.parseMethodsMd5(basePath + nowLocalPath);
+                        HashMap<String, String> nowHashMap = methodParserUtil.parseMethodsMd5(basePath + nowLocalPath);
+                        HashMap<String, String> diffMethod = diffMethods(baseHashMap, nowHashMap);
+                        if (diffMethod.isEmpty()) {
+                            continue;
+                        } else {
+                            StringBuffer buffer = new StringBuffer();
+                            for (String st : diffMethod.values()) {
+                                buffer.append(st).append("#");
+                            }
+                            hashMap.put(nowLocalPath.replace(".java", ""), buffer.toString());
+                        }
+                    }
+                }
+            }
+        } catch (IOException ioe) {
+            log.error("【读取文件出现失败...失败原因：{}】", ioe.getMessage());
+        } catch (GitAPIException e) {
+            log.error("【Git操作失败...失败原因是：{}】", e.getMessage());
+        }
+        return hashMap;
     }
 
 

@@ -9,6 +9,7 @@ import com.example.mc_jacoco.entity.dto.CoverageReportDto;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.po.DeployInfoEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
+import com.example.mc_jacoco.entity.vo.LocalHostRequest;
 import com.example.mc_jacoco.entity.vo.ResultReponse;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
@@ -18,12 +19,9 @@ import com.example.mc_jacoco.executor.CodeCloneExecutor;
 import com.example.mc_jacoco.executor.CodeCompilerExecutor;
 import com.example.mc_jacoco.executor.DiffMethodsExecutor;
 import com.example.mc_jacoco.service.CodeCovService;
-import com.example.mc_jacoco.util.DoubleUtil;
-import com.example.mc_jacoco.util.LocalIpUtil;
-import com.example.mc_jacoco.util.MavenModuleUtil;
-import com.example.mc_jacoco.util.MergeReportHtml;
-import com.google.common.base.Preconditions;
+import com.example.mc_jacoco.util.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.util.TextUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -33,7 +31,6 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -91,6 +88,8 @@ public class CodeCovServiceImpl implements CodeCovService {
             Integer deployId = deployInfoDao.insertDeployInfo(envCoverRequest);
             log.info("【服务部署数据保存成功：{}】", deployId);
             new Thread(() -> {
+                log.info("【开始执行代码克隆...】");
+                codeClone(coverageReportEntity);
                 log.info("【开始执行代码编译...】");
                 cloneCodeAndCompileCode(coverageReportEntity);
                 log.info("【计算增量方法diff集合...】");
@@ -297,15 +296,189 @@ public class CodeCovServiceImpl implements CodeCovService {
         CoverageReportEntity coverageReport = coverageReportDao.queryCoverageReportByUuid(uuid);
         log.info("【getResultEnvCover方法-查询覆盖率信息结果：{}】", coverageReport);
         ResultReponse resultReponse = new ResultReponse();
-        if (coverageReport != null){
+        if (coverageReport != null) {
             BeanUtils.copyProperties(coverageReport, resultReponse);
             resultReponse.setCoverageCode(coverageReport.getRequestStatus());
             resultReponse.setCoverageMsg(StringUtils.isEmpty(coverageReport.getErrMsg()) ? JobStatusEnum.COVERGER_RESULT_SUCCESS_MSG.getCodeMsg() : coverageReport.getErrMsg());
-            log.info("【getResultEnvCover方法-返回覆盖率信息结果：{}】",resultReponse);
+            log.info("【getResultEnvCover方法-返回覆盖率信息结果：{}】", resultReponse);
             return resultReponse;
-        }else {
+        } else {
             return ResultReponse.ResultReponseFailBuid("uuid不存在");
         }
+    }
+
+    /**
+     * 手工触发代码覆盖率计算
+     *
+     * @param localHostRequest
+     * @return
+     */
+    @Override
+    public ResultReponse getLocalCoverResult(LocalHostRequest localHostRequest) {
+        // 补充Path信息
+        localHostRequest.setBaseLocalPath(localHostRequest.getBaseLocalPath().endsWith("/") ? localHostRequest.getBaseLocalPath() : localHostRequest.getBaseLocalPath() + "/");
+        localHostRequest.setNowLocalPath(localHostRequest.getNowLocalPath().endsWith("/") ? localHostRequest.getNowLocalPath() : localHostRequest.getNowLocalPath() + "/");
+        // 计算增量代码覆盖率
+        String diffMethods = diffMethodsExecutor.executeDiffMethodsForEnv(localHostRequest.getBaseLocalPath(), localHostRequest.getNowLocalPath(), localHostRequest.getBaseVersion(), localHostRequest.getNowVersion());
+        if (diffMethods == null) {
+            return ResultReponse.ResultReponseFailBuid("未检测到增量代码", JobStatusEnum.COVERGER_RESULT_FAIL_MSG.getCode());
+        }
+        localHostRequest.setBaseLocalPathProject(localHostRequest.getBaseLocalPath() + FilesUtil.resultfileDirectory(localHostRequest.getBaseLocalPath()));
+        localHostRequest.setNowLocalPathProject(localHostRequest.getNowLocalPath() + FilesUtil.resultfileDirectory(localHostRequest.getNowLocalPath()));
+        ResultReponse pullExcel = pullExecFile(localHostRequest, diffMethods);
+        if (pullExcel == null) {
+            return ResultReponse.ResultReponseFailBuid("代码覆盖率计算失败...请联系管理员介入", JobStatusEnum.COVERGER_RESULT_FAIL_MSG.getCode());
+        }
+        return pullExcel;
+    }
+
+    private ResultReponse pullExecFile(LocalHostRequest localHostRequest, String diffFile) {
+        log.info("【计算增量覆盖率方法入参：{}】", localHostRequest.toString());
+        ResultReponse resultRequest = new ResultReponse();
+        // 根据是增量覆盖率还是全部覆盖率，设置报告名称
+        String reportName = "ManualDiffCoverage";
+        try {
+            // 在最近的代码分支执行覆盖率下载
+            int executeCmd = CmdExecutor.cmdExecutor(new String[]{"cd " + localHostRequest.getNowLocalPathProject() + "&&java -jar " +
+                    AddressConstants.JACOCO_PATH + " dump --address " + localHostRequest.getAddress() + " --port " + localHostRequest.getPort() +
+                    " --destfile " + localHostRequest.getNowLocalPathProject() + "/jacoco.exec"}, NumberConstants.CMD_TIMEOUT);
+            if (executeCmd == 0) {
+                String nowLocalJacocoExec = localHostRequest.getNowLocalPathProject() + "/jacoco.exec";
+                log.info("【覆盖率Dump路径：{}】", nowLocalJacocoExec);
+                // 根据UUid删除报告文件
+                CmdExecutor.cmdExecutor(new String[]{"rm -rf " + AddressConstants.REPORT_PATH + localHostRequest.getUuid()}, NumberConstants.CMD_TIMEOUT);
+                String[] moduleList = new String[]{};
+                if (!TextUtils.isEmpty(localHostRequest.getSubModule())) {
+                    moduleList = localHostRequest.getSubModule().split(",");
+                }
+                StringBuffer buffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report " + nowLocalJacocoExec);
+                if (moduleList.length == 0) {
+                    buffer.append(" --sourcefiles ./src/main/java/ ");
+                    buffer.append(" --classfiles ./target/classes/com/ ");
+                } else {
+                    log.info("【开始计算多module覆盖率....】");
+                    for (String module : moduleList) {
+                        buffer.append(" --sourcefiles ./" + module + "/src/main/java/ ");
+                        buffer.append(" --classfiles ./" + module + "/target/classes/com/ ");
+                    }
+                }
+                // 执行jacoco获取exec文件时，增加Diff方法集合参数，用于后面计算增量方法覆盖率使用
+                if (!StringUtils.isEmpty(diffFile)) {
+                    buffer.append(" --diffFile " + diffFile);
+                }
+                buffer.append(" --html ./jacocoreport/ --encoding utf-8 --name " + reportName);
+                int covExitCode = CmdExecutor.cmdExecutor(new String[]{"cd " + localHostRequest.getNowLocalPathProject() + "&&" + buffer.toString()}, NumberConstants.CMD_TIMEOUT);
+                // 加载项目下的index.html文件
+                File covFile = new File(localHostRequest.getNowLocalPathProject() + "/jacocoreport/index.html");
+                if (covExitCode == 0 && covFile.isFile()) {
+                    log.info("【增量覆盖率HTML文件生成成功】【地址：{}】", covFile.getAbsolutePath());
+                    try {
+                        // 解析index.html文件
+                        Document document = Jsoup.parse(covFile.getAbsoluteFile(), "UTF-8", "");
+                        // 获取字节码指令数据
+                        Elements bars = document.getElementById("coveragetable").getElementsByTag("tfoot").first().getElementsByClass("bar");
+                        // 获取未覆盖的方法、行、类、判断条件
+                        Elements lineCtr1 = document.getElementById("coveragetable").getElementsByTag("tfoot").first().getElementsByClass("ctr1");
+                        // 获取方法总数、行总数、类总数、圈复杂度
+                        Elements lineCtr2 = document.getElementById("coveragetable").getElementsByTag("tfoot").first().getElementsByClass("ctr2");
+                        double lineCoverage = 100;
+                        double branchCoverage = 100;
+                        if (document != null && bars != null) {
+                            // 覆盖率报告文件行未覆盖的数量
+                            double lineMolecule = Double.parseDouble(lineCtr1.get(1).text());
+                            log.info("【lineMolecule结果是：{}】", lineMolecule);
+                            // 覆盖率报告文件行的总数量
+                            double lineDenominator = Double.parseDouble(lineCtr2.get(3).text());
+                            log.info("【lineDenominator结果是：{}】", lineDenominator);
+                            // 计算行覆盖率
+                            lineCoverage = (lineDenominator - lineMolecule) / lineDenominator * 100;
+                            log.info("【行覆盖率计算结果是：{}】", lineCoverage);
+                            String[] barString = bars.get(1).text().split(" of ");
+                            // 获取分支的未覆盖数
+                            double branchMolecule = Double.parseDouble(barString[0]);
+                            log.info("【branchMolecule结果是：{}】", branchMolecule);
+                            // 获取分支的全部总数
+                            double branchDenominator = Double.parseDouble(barString[1]);
+                            log.info("【branchDenominator结果是：{}】", branchDenominator);
+                            // 计算分支覆盖率，如果总分支数<=0的时候，意味着覆盖率报告是没有分支数据的，默认赋值为0
+                            if (branchDenominator > 0.0) {
+                                branchCoverage = (branchDenominator - branchMolecule) / branchDenominator * 100;
+                            } else {
+                                branchCoverage = 0;
+                            }
+                            log.info("【分支覆盖率计算结果是：{}】", branchCoverage);
+                        }
+                        // 将生成的覆盖率报告拷贝到，根目录下的report目录中
+                        String[] cpReportCmd = new String[]{"cp -rf " + covFile.getParent() + " " + AddressConstants.REPORT_PATH + localHostRequest.getUuid() + "/"};
+                        CmdExecutor.cmdExecutor(cpReportCmd, NumberConstants.CMD_TIMEOUT);
+                        resultRequest.setCoverageCode(JobStatusEnum.COVERGER_RESULT_SUCCESS_MSG.getCode());
+                        resultRequest.setCoverageMsg("覆盖率计算成功");
+                        resultRequest.setLineCoverage(lineCoverage);
+                        resultRequest.setBranchCoverage(branchCoverage);
+                        resultRequest.setReportUrl(localHostRequest.getNowLocalPathProject() + "/jacocoreport/index.html");
+                    } catch (Exception e) {
+                        log.error("【解析jacoco报告失败】【失败原因：{}】", e.getMessage());
+                        throw new RuntimeException("【覆盖率报告文件解析失败...原因：】：" + e.getMessage());
+                    }
+                } else {
+                    // 覆盖率生成失败后考虑到是多module情况，重新针对每个module生成覆盖率，将覆盖率的报告进行合并
+                    int littleExitCode = 0;
+                    List<String> childReportList = new ArrayList<>();
+                    if (!(moduleList.length == 0)) {
+                        log.info("【多module分开计算覆盖率】【多module列表：{}】", Arrays.asList(moduleList));
+                        for (String module : moduleList) {
+                            StringBuffer moduleBuffer = new StringBuffer("java -jar " + AddressConstants.JACOCO_PATH + " report ./jacoco.exec");
+                            moduleBuffer.append(" --sourcefiles ./" + module + "/src/main/java/");
+                            moduleBuffer.append(" --classfiles ./" + module + "/target/classes/com/");
+                            if (!StringUtils.isEmpty(diffFile)) {
+                                moduleBuffer.append(" --diffFile " + diffFile);
+                            }
+                            moduleBuffer.append(" --html jacocoreport/" + module + " --encoding utf-8 --name " + reportName);
+                            littleExitCode += CmdExecutor.cmdExecutor(new String[]{"cd " + localHostRequest.getNowLocalPathProject() + "&&" + moduleBuffer.toString()}, NumberConstants.CMD_TIMEOUT);
+                            // 每个module生成的覆盖率报告地址
+                            String moduleReport = localHostRequest.getNowLocalPathProject() + "/jacocoreport/" + module + "/index.html";
+                            log.info("【Module生成的覆盖率报告地址：{}】", moduleReport);
+                            if (littleExitCode == 0) {
+                                // 将每个module的覆盖率报告文件加入到childReportList
+                                childReportList.add(moduleReport);
+                            }
+                        }
+                        log.info("【多module覆盖率报告数据：{}】", childReportList);
+                        // 将覆盖率报告进行合并
+                        if (littleExitCode == 0) {
+                            // 将覆盖率的报告全部拷贝到根目录下的文件里
+                            CmdExecutor.cmdExecutor(new String[]{"cd " + localHostRequest.getNowLocalPathProject() + "&&" + "cp -rf jacocoreport " + AddressConstants.REPORT_PATH + localHostRequest.getUuid() + "/"}, NumberConstants.CMD_TIMEOUT);
+                            Integer[] result = MergeReportHtml.mergerHtml(childReportList, AddressConstants.REPORT_PATH + localHostRequest.getUuid() + "/index.html");
+                            if (result[0] == 1) {
+                                // 将图像拷贝JacocoSource路径下
+                                CmdExecutor.cmdExecutor(new String[]{"cp -r " + AddressConstants.JACOCO_RESOURE_PATH + "/" + " " + AddressConstants.REPORT_PATH + localHostRequest.getUuid()}, NumberConstants.CMD_TIMEOUT);
+                                resultRequest.setCoverageCode(JobStatusEnum.COVERGER_RESULT_SUCCESS_MSG.getCode());
+                                resultRequest.setCoverageMsg("覆盖率计算成功");
+                                resultRequest.setLineCoverage(Double.valueOf(result[2]));
+                                resultRequest.setBranchCoverage(Double.valueOf(result[1]));
+                                resultRequest.setReportUrl(AddressConstants.REPORT_PATH + localHostRequest.getUuid() + "/index.html");
+                            } else {
+                                log.error("【覆盖率生成失败...】");
+                                return null;
+                            }
+                        } else {
+                            log.error("【覆盖率报告合并失败...】");
+                            return null;
+                        }
+                    } else {
+                        log.error("【单模块覆盖率生成失败...】");
+                        return null;
+                    }
+                }
+            } else {
+                log.error("【解析Jacoco.exec文件失败...】");
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("【计算覆盖率失败...】【失败原因：{}】", e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
+        return resultRequest;
     }
 
     /**
@@ -317,12 +490,6 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportEntity.setRequestStatus(JobStatusEnum.CLONING.getCode());
         Integer updateId = coverageReportDao.updateCoverageReportById(coverageReportEntity);
         log.info("【数据更新成功：{}】", updateId);
-        codeCloneExecutor.cloneCode(coverageReportEntity);
-        coverageReportDao.updateCoverageReportById(coverageReportEntity);
-        if (JobStatusEnum.CLONE_FAIL.getCode().equals(coverageReportEntity.getRequestStatus())) {
-            log.error("【代码克隆失败...UUID：{}】【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
-            return;
-        }
         CoverageReportDto coverageReportDto = new CoverageReportDto();
         BeanUtils.copyProperties(coverageReportEntity, coverageReportDto);
         //开始编译代码
@@ -349,6 +516,17 @@ public class CodeCovServiceImpl implements CodeCovService {
         log.info("【更新部署表信息内容入参：{}】", deployInfoEntity);
         Integer updateDeployment = deployInfoDao.updateDeployInfoByUuid(deployInfoEntity);
         log.info("【更新部署表信息内容成功返回值：{}】", updateDeployment);
+    }
+
+    /**
+     * 代码克隆
+     */
+    public void codeClone(CoverageReportEntity coverageReportEntity) {
+        codeCloneExecutor.cloneCode(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        if (JobStatusEnum.CLONE_FAIL.getCode().equals(coverageReportEntity.getRequestStatus())) {
+            log.error("【代码克隆失败...UUID：{}】【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
+        }
     }
 
     private CoverageReportEntity coverageReportEntityBuild(EnvCoverRequest envCoverRequest) {

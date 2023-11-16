@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author luping
@@ -33,5 +35,23 @@ public class DiffMethodsExecutor {
         long end = System.currentTimeMillis();
         log.info("【计算增量方法耗时：{}ms...增量方法内容是：{}】",(end - start),buf.toString());
         coverageReport.setDiffMethod(buf.toString());
+    }
+
+    public String executeDiffMethodsForEnv(String basePath,String nowPath,String baseVersion,String nowVersion){
+        log.info("【计算增量方法入参：{}--{}--{}--{}】",basePath,nowPath,baseVersion,nowVersion);
+        StringBuffer buf = new StringBuffer();
+        long start = System.currentTimeMillis();
+        HashMap<String,String> hashMap = JDiffFiles.diffMethodsListForEnv(basePath,nowPath,baseVersion,nowVersion);
+        if (hashMap != null && !hashMap.isEmpty()){
+            Iterator<Map.Entry<String, String>> iterator = hashMap.entrySet().iterator();
+            while (iterator.hasNext()){
+                Map.Entry<String, String> entry = iterator.next();
+                buf.append(entry.getKey()).append(":").append(entry.getValue()).append("%");
+            }
+            long end = System.currentTimeMillis();
+            log.info("【计算增量方法耗时：{}ms...增量方法内容是：{}】",(end - start),buf.toString());
+            return buf.toString();
+        }
+        return null;
     }
 }

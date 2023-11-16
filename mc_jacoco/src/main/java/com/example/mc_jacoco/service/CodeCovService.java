@@ -2,6 +2,7 @@ package com.example.mc_jacoco.service;
 
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
+import com.example.mc_jacoco.entity.vo.LocalHostRequest;
 import com.example.mc_jacoco.entity.vo.ResultReponse;
 
 /**
@@ -27,5 +28,19 @@ public interface CodeCovService {
      */
     void calculateEnvCov(CoverageReportEntity coverageReportEntity);
 
+    /**
+     * 查询覆盖率结果
+     * @param uuid
+     * @return
+     */
     ResultReponse getResultEnvCover(String uuid);
+
+
+    /**
+     * 手工触发覆盖率的计算（前提是项目代码已经下载到覆盖率的服务器中）
+     * @param localHostRequest
+     * @return
+     */
+    ResultReponse getLocalCoverResult(LocalHostRequest localHostRequest);
+
 }
