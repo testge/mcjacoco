@@ -11,9 +11,11 @@ import com.example.mc_jacoco.entity.po.DeployInfoEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
 import com.example.mc_jacoco.entity.vo.LocalHostRequest;
 import com.example.mc_jacoco.entity.vo.ResultReponse;
+import com.example.mc_jacoco.entity.vo.UntiCoverRequest;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.enums.ReportTypeEnum;
+import com.example.mc_jacoco.exception.ReponseException;
 import com.example.mc_jacoco.executor.CmdExecutor;
 import com.example.mc_jacoco.executor.CodeCloneExecutor;
 import com.example.mc_jacoco.executor.CodeCompilerExecutor;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import javax.annotation.Tainted;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -291,6 +294,9 @@ public class CodeCovServiceImpl implements CodeCovService {
         }
     }
 
+    /**
+     * 查询覆盖率数据
+     */
     @Override
     public ResultReponse getResultEnvCover(String uuid) {
         CoverageReportEntity coverageReport = coverageReportDao.queryCoverageReportByUuid(uuid);
@@ -330,6 +336,46 @@ public class CodeCovServiceImpl implements CodeCovService {
             return ResultReponse.ResultReponseFailBuid("代码覆盖率计算失败...请联系管理员介入", JobStatusEnum.COVERGER_RESULT_FAIL_MSG.getCode());
         }
         return pullExcel;
+    }
+
+    /**
+     * 触发单元测试覆盖率
+     *
+     * @param untiCoverRequest
+     */
+    @Override
+    public Result triggerUnitCov(UntiCoverRequest untiCoverRequest) {
+        CoverageReportEntity coverRequest = coverageReportDao.queryCoverageReportByUuid(untiCoverRequest.getUuid());
+        if (coverRequest != null) {
+            log.error(String.format("uuid：%s已经调用过，请勿重复调用", untiCoverRequest.getUuid()));
+            return Result.fail(String.format("uuid：%s已经调用过，请勿重复调用", untiCoverRequest.getUuid()));
+        }
+        CoverageReportEntity coverReport = new CoverageReportEntity();
+        coverReport.setJobRecordUuid(untiCoverRequest.getUuid());
+        coverReport.setGitUrl(untiCoverRequest.getGitUrl());
+        coverReport.setBaseVersion(untiCoverRequest.getBaseVersion());
+        coverReport.setNowVersion(untiCoverRequest.getNowVersion());
+        coverReport.setSubModule(StringUtils.isEmpty(untiCoverRequest.getSubModule()) ? "" : untiCoverRequest.getSubModule());
+        coverReport.setType(untiCoverRequest.getType());
+        coverReport.setLineCoverage(Double.parseDouble("-1"));
+        coverReport.setBranchCoverage(Double.parseDouble("-1"));
+        coverReport.setEnvType(untiCoverRequest.getEnvType());
+        coverReport.setFrom(CoverageFrom.UNIT.getEnv());
+        coverReport.setRequestStatus(JobStatusEnum.INITIAL.getCode());
+        log.info("【保存覆盖率数据：{}】", coverReport.toString());
+        try {
+            Integer reportInsert = coverageReportDao.insertCoverageReportById(coverReport);
+            if (reportInsert > 0) {
+                log.info(String.format("uuid：%s单元测试数据保存成功", coverReport.getJobRecordUuid()));
+                return Result.success(String.format("uuid：%s单元测试数据保存成功", coverReport.getJobRecordUuid()));
+            } else {
+                log.error(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()));
+                return Result.fail(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()));
+            }
+        } catch (Exception e) {
+            log.error(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()) + "【失败原因：{}】",e.getMessage());
+            return Result.fail(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()));
+        }
     }
 
     private ResultReponse pullExecFile(LocalHostRequest localHostRequest, String diffFile) {

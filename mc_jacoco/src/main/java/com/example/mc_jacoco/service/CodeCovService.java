@@ -4,6 +4,8 @@ import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
 import com.example.mc_jacoco.entity.vo.LocalHostRequest;
 import com.example.mc_jacoco.entity.vo.ResultReponse;
+import com.example.mc_jacoco.entity.vo.UntiCoverRequest;
+import com.example.mc_jacoco.util.Result;
 
 /**
  * @author luping
@@ -42,5 +44,11 @@ public interface CodeCovService {
      * @return
      */
     ResultReponse getLocalCoverResult(LocalHostRequest localHostRequest);
+
+    /**
+     * 触发单元覆盖率收集
+     * @param untiCoverRequest
+     */
+    Result triggerUnitCov(UntiCoverRequest untiCoverRequest);
 
 }

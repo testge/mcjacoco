@@ -6,6 +6,7 @@ package com.example.mc_jacoco.enums;
  */
 public enum JobStatusEnum {
     NODIFF(100, "无增量"),
+    INITIAL(0, "数据初始"),
     WAITING(1, "待执行"),
     CLONING(2, "下载代码中"),
     COMPILING(3, "编译中"),
