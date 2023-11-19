@@ -120,8 +120,11 @@ public class JDiffFiles {
             Repository nowRepository;
             baseGit = Git.open(baseFile);
             nowGit = Git.open(nowFile);
+            // getRepository返回的是git存储库路径：Repository[/Users/luping/app/mcs_jacoco/clonecode/101000000210022/main/.git]
             baseRepository = baseGit.getRepository();
             nowRepository = nowGit.getRepository();
+            // resolve是可以根据分支名解析出对象id，入参可以是分支名或者指定ID，默认是获取该存储库中的分支的最新的提交Log，
+            // 并将Log通过SHA-1的加密算法返回
             ObjectId baseObjectId = baseRepository.resolve(baseVersion);
             ObjectId nowObjectId = nowRepository.resolve(nowVersion);
             AbstractTreeIterator baseTree = prepareTreeParser(baseRepository, baseObjectId);
@@ -169,8 +172,10 @@ public class JDiffFiles {
 
     public static AbstractTreeIterator prepareTreeParser(Repository repository, AnyObjectId objectId) throws IOException {
         try {
+            // RevWalk可以获取版本库中历史的提交记录
             RevWalk walk = new RevWalk(repository);
             RevTree tree;
+            // parseTree是解析给定的版本记录对象ID
             tree = walk.parseTree(objectId);
             CanonicalTreeParser TreeParser = new CanonicalTreeParser();
             try (ObjectReader reader = repository.newObjectReader()) {
