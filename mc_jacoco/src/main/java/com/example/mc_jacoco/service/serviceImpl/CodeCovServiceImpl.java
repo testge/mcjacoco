@@ -15,7 +15,6 @@ import com.example.mc_jacoco.entity.vo.UntiCoverRequest;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.enums.ReportTypeEnum;
-import com.example.mc_jacoco.exception.ReponseException;
 import com.example.mc_jacoco.executor.CmdExecutor;
 import com.example.mc_jacoco.executor.CodeCloneExecutor;
 import com.example.mc_jacoco.executor.CodeCompilerExecutor;
@@ -32,7 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import javax.annotation.Tainted;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -292,6 +290,15 @@ public class CodeCovServiceImpl implements CodeCovService {
         } finally {
             coverageReportDao.updateCoverageReportById(coverageReportEntity);
         }
+    }
+
+    /**
+     * 单元测试覆盖率计算
+     * @param coverageReportEntity
+     */
+    @Override
+    public void calculateUnitCover(CoverageReportEntity coverageReportEntity) {
+        log.info("单元测试覆盖率计算单元测试覆盖率计算单元测试覆盖率计算单元测试覆盖率计算");
     }
 
     /**

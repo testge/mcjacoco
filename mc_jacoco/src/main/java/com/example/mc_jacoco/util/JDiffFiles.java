@@ -1,6 +1,5 @@
 package com.example.mc_jacoco.util;
 
-import ch.qos.logback.core.util.FileUtil;
 import com.example.mc_jacoco.constants.AddressConstants;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.enums.JobStatusEnum;
@@ -23,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author luping

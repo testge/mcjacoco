@@ -81,6 +81,11 @@ public class CoverageReportDto {
     private Integer from;
 
     /**
+     * 重试次数 默认0次
+     */
+    private Integer retryCount;
+
+    /**
      * 当前版本路径
      */
     private String nowLocalPath;
@@ -137,6 +142,7 @@ public class CoverageReportDto {
                 ", errMsg='" + errMsg + '\'' +
                 ", subModule='" + subModule + '\'' +
                 ", from=" + from +
+                ", retryCount=" + retryCount +
                 ", nowLocalPath='" + nowLocalPath + '\'' +
                 ", baseLocalPath='" + baseLocalPath + '\'' +
                 ", log_file='" + log_file + '\'' +

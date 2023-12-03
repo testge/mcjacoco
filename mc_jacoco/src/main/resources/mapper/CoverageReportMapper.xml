@@ -20,6 +20,7 @@
         <result column="err_msg" property="errMsg" jdbcType="VARCHAR"/>
         <result column="sub_module" property="subModule" jdbcType="VARCHAR"/>
         <result column="from" property="from" jdbcType="INTEGER"/>
+        <result column="retry_count" property="retryCount" jdbcType="INTEGER"/>
         <result column="now_local_path" property="nowLocalPath" jdbcType="VARCHAR"/>
         <result column="base_local_path" property="baseLocalPath" jdbcType="VARCHAR"/>
         <result column="log_file" property="log_file" jdbcType="VARCHAR"/>
@@ -29,7 +30,7 @@
 
     <sql id="coverageReport">
         id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,line_coverage,branch_coverage,
-            err_msg,sub_module,`from`,now_local_path,base_local_path,log_file
+            err_msg,sub_module,`from`,retry_count,now_local_path,base_local_path,log_file
     </sql>
 
     <!--  保存覆盖率数据  -->
@@ -101,12 +102,43 @@
         </set>
         where job_record_uuid = #{coverageReportEntity.jobRecordUuid,jdbcType=VARCHAR}
     </update>
+
+    <!--  修改数据状态，使用乐观锁 -->
+    <update id="casUpdateByStatus">
+        update diff_coverage_report
+        <trim prefix="set" suffixOverrides=",">
+            <if test="newStatus != null">
+                request_status = #{newStatus,jdbcType=INTEGER},
+            </if>
+            <if test="retryCount != null">
+                retry_count = #{retryCount,jdbcType=INTEGER} + 1
+            </if>
+        </trim>
+        where request_status = #{expectStatus,jdbcType=INTEGER}
+        and job_record_uuid = #{uuid,jdbcType=VARCHAR}
+    </update>
+
+
     <!--  根据UUid查询覆盖率信息  -->
     <select id="queryCoverageReportByUuid" resultMap="coverageReportEntity">
         SELECT
         <include refid="coverageReport"/>
         FROM diff_coverage_report
         where job_record_uuid = #{uuid,jdbcType=VARCHAR}
+    </select>
+    <!--  根据状态和类型查询  -->
+    <select id="querByStatusAndfrom" resultMap="coverageReportEntity">
+        select <include refid="coverageReport"/>
+        from diff_coverage_report
+        <where>
+            <if test="requestStatue != null">
+                request_status = #{requestStatue,jdbcType=INTEGER}
+            </if>
+            <if test="from != null">
+                and `from` = #{from,jdbcType=INTEGER}
+            </if>
+        and retry_count &lt; 3
+        </where>
     </select>
 
 </mapper>

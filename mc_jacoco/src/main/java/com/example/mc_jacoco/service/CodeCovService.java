@@ -30,6 +30,8 @@ public interface CodeCovService {
      */
     void calculateEnvCov(CoverageReportEntity coverageReportEntity);
 
+    void calculateUnitCover(CoverageReportEntity coverageReportEntity);
+
     /**
      * 查询覆盖率结果
      * @param uuid

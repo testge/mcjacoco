@@ -97,6 +97,13 @@
             <artifactId>guava</artifactId>
             <version>29.0-jre</version>
         </dependency>
+        <!--   热部署     -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <!--可选的，设置为true，打包时不会进入项目 设置false会进入到生产中-->
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>

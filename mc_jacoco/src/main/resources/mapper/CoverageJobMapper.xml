@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--接口和映射文件相对应-->
+<mapper namespace="com.example.mc_jacoco.dao.CoverageJobDao">
+    <resultMap id="coverageJob" type="com.example.mc_jacoco.entity.po.CoverageJobEntity">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="job_name" property="jobName" jdbcType="VARCHAR"/>
+        <result column="job_corn" property="jobCorn" jdbcType="VARCHAR"/>
+        <result column="job_status" property="jobStatus" jdbcType="INTEGER"/>
+        <result column="job_extend" property="jobExtend" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="DATE"/>
+        <result column="update_time" property="updateTime" jdbcType="DATE"/>
+    </resultMap>
+
+    <!--  根据任务名称查询指定任务  -->
+    <select id="queryByJobNameAndStatue" resultMap="coverageJob">
+        select * from coverage_job
+        <where>
+            <if test="jobName != null">
+                job_name = #{jobName,jdbcType=VARCHAR}
+            </if>
+        and job_status = #{jobStatus,jdbcType=INTEGER}
+        </where>
+
+    </select>
+
+</mapper>

@@ -84,6 +84,11 @@ public class CoverageReportEntity {
     private Integer from;
 
     /**
+     * 重试次数 默认0次
+     */
+    private Integer retryCount;
+
+    /**
      * 当前版本路径
      */
     private String nowLocalPath;
