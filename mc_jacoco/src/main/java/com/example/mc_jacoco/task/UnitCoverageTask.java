@@ -63,7 +63,6 @@ public class UnitCoverageTask implements BaseTask {
                     CompletableFuture.runAsync(()->{
                         codeCovService.calculateUnitCover(value);
                     },executor);
-                    int a = 1 / 0;
                 }else {
                     log.info("【初始数据修改异常...uuid：{}】",value.getJobRecordUuid());
                 }
