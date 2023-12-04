@@ -298,7 +298,18 @@ public class CodeCovServiceImpl implements CodeCovService {
      */
     @Override
     public void calculateUnitCover(CoverageReportEntity coverageReportEntity) {
-        log.info("单元测试覆盖率计算单元测试覆盖率计算单元测试覆盖率计算单元测试覆盖率计算");
+        long starttime = System.currentTimeMillis();
+        log.info("【{}:计算增量代码覆盖率步骤...开始执行uuid:{}】",Thread.currentThread().getName(),coverageReportEntity.getJobRecordUuid());
+        coverageReportEntity.setRequestStatus(JobStatusEnum.CLONING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        // 执行代码克隆
+        codeClone(coverageReportEntity);
+        // 计算增量方法
+        coverageReportEntity.setRequestStatus(JobStatusEnum.DIFF_METHODS_EXECUTING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        diffMethodsExecutor.executeDiffMethods(coverageReportEntity);
+        coverageReportEntity.setRequestStatus(JobStatusEnum.DIFF_METHOD_DONE.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
     }
 
     /**

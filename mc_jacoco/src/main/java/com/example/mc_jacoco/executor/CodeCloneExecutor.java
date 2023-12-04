@@ -4,6 +4,7 @@ import com.example.mc_jacoco.constants.AddressConstants;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.handler.GitHandler;
+import com.example.mc_jacoco.util.CheckoutUtils;
 import com.example.mc_jacoco.util.FilesUtil;
 import com.example.mc_jacoco.util.LocalIpUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,14 @@ public class CodeCloneExecutor {
      */
     public void cloneCode(CoverageReportEntity coverageReportEntity) {
         log.info("【进入代码克隆方法入参：{}】", coverageReportEntity.toString());
+        if (CheckoutUtils.commitIdIsValid(coverageReportEntity)){
+            log.info("【基准分支与对比分支的CommitId 一致】");
+            coverageReportEntity.setErrMsg("基准分支与对比分支的CommitId 一致");
+            coverageReportEntity.setRequestStatus(JobStatusEnum.NODIFF.getCode());
+            coverageReportEntity.setBranchCoverage(Double.valueOf("100"));
+            coverageReportEntity.setLineCoverage(Double.valueOf("100"));
+            return;
+        }
         // 定义log文件地址（基础地址+uuid）
         String logFile = LocalIpUtil.getBaseUrl() + "logs/" + coverageReportEntity.getJobRecordUuid() + ".log";
         coverageReportEntity.setLog_file(logFile);
