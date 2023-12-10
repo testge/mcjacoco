@@ -15,10 +15,7 @@ import com.example.mc_jacoco.entity.vo.UntiCoverRequest;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.enums.ReportTypeEnum;
-import com.example.mc_jacoco.executor.CmdExecutor;
-import com.example.mc_jacoco.executor.CodeCloneExecutor;
-import com.example.mc_jacoco.executor.CodeCompilerExecutor;
-import com.example.mc_jacoco.executor.DiffMethodsExecutor;
+import com.example.mc_jacoco.executor.*;
 import com.example.mc_jacoco.service.CodeCovService;
 import com.example.mc_jacoco.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -62,6 +59,15 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     @Resource
     private DiffMethodsExecutor diffMethodsExecutor;
+
+    @Resource
+    private MavenModuleAddExecutor mavenModuleAddExecutor;
+
+    @Resource
+    private UnitTestExecutor unitTestExecutor;
+
+    @Resource
+    private ReportAnalyzeExecutor reportAnalyzeExecutor;
 
     /**
      * 收集覆盖率
@@ -298,7 +304,6 @@ public class CodeCovServiceImpl implements CodeCovService {
      */
     @Override
     public void calculateUnitCover(CoverageReportEntity coverageReportEntity) {
-        long starttime = System.currentTimeMillis();
         log.info("【{}:计算增量代码覆盖率步骤...开始执行uuid:{}】",Thread.currentThread().getName(),coverageReportEntity.getJobRecordUuid());
         coverageReportEntity.setRequestStatus(JobStatusEnum.CLONING.getCode());
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
@@ -310,6 +315,42 @@ public class CodeCovServiceImpl implements CodeCovService {
         diffMethodsExecutor.executeDiffMethods(coverageReportEntity);
         coverageReportEntity.setRequestStatus(JobStatusEnum.DIFF_METHOD_DONE.getCode());
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        // 添加集成模块
+        coverageReportEntity.setRequestStatus(JobStatusEnum.ADDMODULING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        mavenModuleAddExecutor.addMavenModule(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.ADDMODULE_DONE.getCode())){
+            return;
+        }
+        // 执行单元测试
+        coverageReportEntity.setRequestStatus(JobStatusEnum.UNITTESTEXECUTING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        unitTestExecutor.executeUnitTest(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.UNITTEST_DONE.getCode())){
+            return;
+        }
+        // 分析覆盖率报告
+        coverageReportEntity.setRequestStatus(JobStatusEnum.REPORTPARSING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        reportAnalyzeExecutor.parseReport(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.PARSEREPORT_DONE.getCode())){
+            return;
+        }
+        // 复制报告
+        coverageReportEntity.setRequestStatus(JobStatusEnum.REPORTCOPYING.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        reportAnalyzeExecutor.copyReport(coverageReportEntity);
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.COPYREPORT_DONE.getCode())){
+            return;
+        }
+        // 更新最终状态
+        coverageReportEntity.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
+        coverageReportDao.updateCoverageReportById(coverageReportEntity);
+        log.info("【uuid:{}的覆盖率任务计算成功...状态：{}】",coverageReportEntity.getJobRecordUuid(),coverageReportEntity.getRequestStatus());
     }
 
     /**

@@ -119,6 +119,11 @@ public class CoverageReportEntity {
     private String envType;
 
     /**
+     * 报告地址
+     */
+    private String reportFile;
+
+    /**
      * 当前版本路径含项目地址
      */
     private String nowLocalPathProject;
@@ -145,12 +150,14 @@ public class CoverageReportEntity {
                 ", errMsg='" + errMsg + '\'' +
                 ", subModule='" + subModule + '\'' +
                 ", from=" + from +
+                ", retryCount=" + retryCount +
                 ", nowLocalPath='" + nowLocalPath + '\'' +
                 ", baseLocalPath='" + baseLocalPath + '\'' +
                 ", log_file='" + log_file + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", envType='" + envType + '\'' +
+                ", reportFile='" + reportFile + '\'' +
                 ", nowLocalPathProject='" + nowLocalPathProject + '\'' +
                 ", baseLocalPathProject='" + baseLocalPathProject + '\'' +
                 '}';

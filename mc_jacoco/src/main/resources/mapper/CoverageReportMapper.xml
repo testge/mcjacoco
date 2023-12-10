@@ -15,6 +15,7 @@
         <result column="diffmethod" property="diffMethod" jdbcType="VARCHAR"/>
         <result column="type" property="type" jdbcType="INTEGER"/>
         <result column="report_url" property="reportUrl" jdbcType="VARCHAR"/>
+        <result column="report_file" property="reportFile" jdbcType="VARCHAR"/>
         <result column="line_coverage" property="lineCoverage" jdbcType="DOUBLE"/>
         <result column="branch_coverage" property="branchCoverage" jdbcType="DOUBLE"/>
         <result column="err_msg" property="errMsg" jdbcType="VARCHAR"/>
@@ -29,7 +30,7 @@
     </resultMap>
 
     <sql id="coverageReport">
-        id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,line_coverage,branch_coverage,
+        id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,report_file,line_coverage,branch_coverage,
             err_msg,sub_module,`from`,retry_count,now_local_path,base_local_path,log_file
     </sql>
 

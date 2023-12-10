@@ -43,7 +43,7 @@ public class CmdExecutor {
      * @return
      */
     public static Integer cmdExecutor(String[] values, Long time) throws Exception {
-        log.info("【cmdExecutor入参：{}】【长度是：{}】", Arrays.asList(values), values.length);
+        log.info("【cmdExecutor命令执行器入参：{}】【长度是：{}】", Arrays.asList(values), values.length);
         if (values.length == 0 || values == null) {
             throw new IllegalArgumentException("【命令是空...请检查】");
         }
@@ -76,7 +76,7 @@ public class CmdExecutor {
                 throw new TimeoutException("【执行超时...】");
             }
         } catch (Exception e) {
-            log.error("【executeCmd builder.start(); IOException :{}】", e.getMessage());
+            log.error("【executeCmd builder.start(); 异常内容是 IOException :{}】", e.getMessage());
             throw e;
         } finally {
             if (proces != null) {
@@ -130,6 +130,12 @@ public class CmdExecutor {
                 }
             }
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        CmdExecutor cmdExecutors = new CmdExecutor();
+        String[] strings = new String[]{"cd -rf /Users/luping/app/mcs_jacoco/clonecode/1105555555510015/feature_newtest02/studyproject/jacocomodule/target/site/jacoco-aggregate/ /Users/luping/report/1105555555510015"};
+        System.out.println(CmdExecutor.cmdExecutor(strings,60000L));
     }
 }
 
