@@ -118,11 +118,4 @@ public class ReportAnalyzeExecutor {
         }
     }
 
-    public static void main(String[] args) {
-        ReportAnalyzeExecutor reportAnalyzeExecutor = new ReportAnalyzeExecutor();
-        CoverageReportEntity coverageReportEntity = new CoverageReportEntity();
-        coverageReportEntity.setReportFile("/Users/luping/app/mcs_jacoco/clonecode/1105555555510013/feature_newtest02/studyproject/jacocomodule/target/site/jacoco-aggregate/index.html");
-        reportAnalyzeExecutor.parseReport(coverageReportEntity);
-    }
-
 }

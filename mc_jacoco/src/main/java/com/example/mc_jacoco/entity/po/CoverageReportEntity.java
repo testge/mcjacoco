@@ -114,7 +114,7 @@ public class CoverageReportEntity {
     private Date updateTime;
 
     /**
-     * 环境类型，环境部署收集覆盖率暂时用不到这个字段
+     * 环境类型，环境部署收集覆盖率暂时用不到这个字段,单测类型会用到
      */
     private String envType;
 

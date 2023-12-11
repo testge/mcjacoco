@@ -25,20 +25,21 @@
         <result column="now_local_path" property="nowLocalPath" jdbcType="VARCHAR"/>
         <result column="base_local_path" property="baseLocalPath" jdbcType="VARCHAR"/>
         <result column="log_file" property="log_file" jdbcType="VARCHAR"/>
+        <result column="env_type" property="envType" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="DATE"/>
         <result column="update_time" property="updateTime" jdbcType="DATE"/>
     </resultMap>
 
     <sql id="coverageReport">
         id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,report_file,line_coverage,branch_coverage,
-            err_msg,sub_module,`from`,retry_count,now_local_path,base_local_path,log_file
+            err_msg,sub_module,`from`,retry_count,now_local_path,base_local_path,log_file,env_type
     </sql>
 
     <!--  保存覆盖率数据  -->
     <insert id="insertCoverageReportById" parameterType="com.example.mc_jacoco.entity.po.CoverageReportEntity">
         INSERT INTO diff_coverage_report(`from`, `job_record_uuid`, `giturl`, `now_version`, `base_version`, `type`,
                                          `sub_module`, `line_coverage`,
-                                         `branch_coverage`, `request_status`, `err_msg`)
+                                         `branch_coverage`, `request_status`,`env_type`, `err_msg`)
         values (#{from,jdbcType=INTEGER},
                 #{jobRecordUuid,jdbcType=VARCHAR},
                 #{gitUrl,jdbcType=VARCHAR},
@@ -49,6 +50,7 @@
                 #{branchCoverage,jdbcType=DOUBLE},
                 #{lineCoverage,jdbcType=DOUBLE},
                 #{requestStatus,jdbcType=INTEGER},
+                #{envType,jdbcType=VARCHAR},
                 #{errMsg,jdbcType=VARCHAR})
     </insert>
 
