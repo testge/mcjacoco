@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--接口和映射文件相对应-->
+<mapper namespace="com.example.mc_jacoco.dao.ProjectDao">
+    <resultMap id="projectMap" type="com.example.mc_jacoco.entity.po.ProjectEntity">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="project_name" property="projectName" jdbcType="VARCHAR"/>
+        <result column="code_url" property="codeUrl" jdbcType="VARCHAR"/>
+        <result column="base_version" property="baseVersion" jdbcType="VARCHAR"/>
+        <result column="now_version" property="nowVersion" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="port" property="port" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="DATE"/>
+        <result column="update_time" property="updateTime" jdbcType="DATE"/>
+    </resultMap>
+
+    <sql id="projectSql">
+        id,project_name,code_url,base_version,now_version,`type`,address,port,update_time
+    </sql>
+
+    <!-- 项目新增   -->
+    <insert id="insertProject">
+        INSERT INTO coverage_project(project_name,code_url,base_version,now_version,`type`,address,port)
+        VALUES (#{projectEntity.projectName,jdbcType=VARCHAR},
+                #{projectEntity.codeUrl,jdbcType=VARCHAR},
+                #{projectEntity.baseVersion,jdbcType=VARCHAR},
+                #{projectEntity.nowVersion,jdbcType=VARCHAR},
+                #{projectEntity.type,jdbcType=VARCHAR},
+                #{projectEntity.address,jdbcType=VARCHAR},
+                #{projectEntity.port,jdbcType=VARCHAR}
+                )
+    </insert>
+
+    <select id="queryProject" resultMap="projectMap">
+        SELECT
+        <include refid="projectSql"/>
+        FROM coverage_project
+        <where>
+            <if test="projectEntity.projectName != null and projectEntity.projectName !=''">
+                project_name like CONCAT(CONCAT('%',#{projectEntity.projectName,jdbcType=VARCHAR},'%'))
+            </if>
+            <if test="projectEntity.codeUrl != null and projectEntity.codeUrl !=''">
+                AND code_url like CONCAT(CONCAT('%',#{projectEntity.codeUrl,jdbcType=VARCHAR},'%'))
+            </if>
+            <if test="projectEntity.baseVersion != null and projectEntity.baseVersion !=''">
+                AND base_version= #{projectEntity.baseVersion,jdbcType=VARCHAR}
+            </if>
+            <if test="projectEntity.nowVersion != null and projectEntity.nowVersion !=''">
+                AND now_version like CONCAT(CONCAT('%',#{projectEntity.nowVersion,jdbcType=VARCHAR},'%'))
+            </if>
+            <if test="projectEntity.type != null">
+                AND `type` = #{projectEntity.type,jdbcType=VARCHAR}
+            </if>
+            <if test="projectEntity.address != null and projectEntity. address !=''">
+                AND address like CONCAT(CONCAT('%',#{projectEntity.address,jdbcType=VARCHAR},'%'))
+            </if>
+            <if test="projectEntity.port != null and projectEntity.port !=''">
+                AND port = #{projectEntity.port,jdbcType=VARCHAR}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+</mapper>
