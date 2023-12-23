@@ -1,6 +1,5 @@
 package com.example.mc_jacoco.service;
 
-import com.example.mc_jacoco.entity.po.ProjectEntity;
 import com.example.mc_jacoco.entity.vo.ProjectRequest;
 import com.example.mc_jacoco.util.Result;
 

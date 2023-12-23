@@ -1,11 +1,9 @@
 package com.example.mc_jacoco.controller;
 
-import com.example.mc_jacoco.entity.po.ProjectEntity;
 import com.example.mc_jacoco.entity.vo.ProjectRequest;
 import com.example.mc_jacoco.service.ProjectService;
 import com.example.mc_jacoco.util.Result;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -26,8 +24,7 @@ public class ProjectController {
 
     /**
      * 项目新增接口
-     *
-     * @param projectEntity
+     * @param projectRequest
      * @return
      */
     @RequestMapping(value = "/projectSave", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
