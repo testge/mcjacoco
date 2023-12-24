@@ -7,6 +7,7 @@
 <mapper namespace="com.example.mc_jacoco.dao.CoverageReportDao">
     <resultMap id="coverageReportEntity" type="com.example.mc_jacoco.entity.po.CoverageReportEntity">
         <id column="id" property="id" jdbcType="INTEGER"/>
+        <id column="project_id" property="projectId" jdbcType="INTEGER"/>
         <result column="job_record_uuid" property="jobRecordUuid" jdbcType="VARCHAR"/>
         <result column="request_status" property="requestStatus" jdbcType="INTEGER"/>
         <result column="giturl" property="gitUrl" jdbcType="VARCHAR"/>
@@ -31,16 +32,17 @@
     </resultMap>
 
     <sql id="coverageReport">
-        id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,report_file,line_coverage,branch_coverage,
+        id,project_id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,report_file,line_coverage,branch_coverage,
             err_msg,sub_module,`from`,retry_count,now_local_path,base_local_path,log_file,env_type
     </sql>
 
     <!--  保存覆盖率数据  -->
     <insert id="insertCoverageReportById" parameterType="com.example.mc_jacoco.entity.po.CoverageReportEntity">
-        INSERT INTO diff_coverage_report(`from`, `job_record_uuid`, `giturl`, `now_version`, `base_version`, `type`,
+        INSERT INTO diff_coverage_report(project_id,`from`, `job_record_uuid`, `giturl`, `now_version`, `base_version`, `type`,
                                          `sub_module`, `line_coverage`,
                                          `branch_coverage`, `request_status`,`env_type`, `err_msg`)
-        values (#{from,jdbcType=INTEGER},
+        values (#{projectId,jdbcType=INTEGER},
+                #{from,jdbcType=INTEGER},
                 #{jobRecordUuid,jdbcType=VARCHAR},
                 #{gitUrl,jdbcType=VARCHAR},
                 #{nowVersion,jdbcType=VARCHAR},

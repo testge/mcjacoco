@@ -95,8 +95,8 @@ public class GitHandler {
     }
 //    public static void main(String[] args) throws GitAPIException {
 //        String locl = "git@github.com:lupingp/jacoco_study_project_test.git";
-//        String locl1 = "/Users/luping/app/mcs_jacoco/clonecode/101000000170009/main";
-//        String locl2 = "main";
+//        String locl1 = "/Users/luping/app/mcs_jacoco/clonecode/11111100001/feature_newtest02";
+//        String locl2 = "feature/newtest02";
 //        GitHandler gitSSh = new GitHandler();
 //        gitSSh.cloneRepository(locl,locl1,locl2);
 //    }

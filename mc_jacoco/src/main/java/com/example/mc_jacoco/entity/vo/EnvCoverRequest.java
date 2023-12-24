@@ -18,4 +18,12 @@ public class EnvCoverRequest extends CoverBaseRequest {
      * 环境地址端口
      */
     private String port;
+
+    @Override
+    public String toString() {
+        return "EnvCoverRequest{" +
+                "address='" + address + '\'' +
+                ", port='" + port + '\'' +
+                "} " + super.toString();
+    }
 }

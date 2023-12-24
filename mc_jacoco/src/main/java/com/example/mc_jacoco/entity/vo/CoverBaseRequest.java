@@ -21,9 +21,14 @@ public class CoverBaseRequest {
     private Integer id;
 
     /**
+     * 项目ID
+     */
+    private Integer projectId;
+
+    /**
      * uuid是必须的，在后续查询结果时需要使用 属于唯一ID
      */
-    @NotBlank(message = "uuid唯一标识不能为空")
+//    @NotBlank(message = "uuid唯一标识不能为空")
     private String uuid;
 
     /**
@@ -66,4 +71,20 @@ public class CoverBaseRequest {
      * 更新时间
      */
     private Date updateTime;
+
+    @Override
+    public String toString() {
+        return "CoverBaseRequest{" +
+                "id=" + id +
+                ", projectId=" + projectId +
+                ", uuid='" + uuid + '\'' +
+                ", gitUrl='" + gitUrl + '\'' +
+                ", baseVersion='" + baseVersion + '\'' +
+                ", nowVersion='" + nowVersion + '\'' +
+                ", subModule='" + subModule + '\'' +
+                ", type=" + type +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                '}';
+    }
 }

@@ -38,6 +38,7 @@ public class CoverController {
     @RequestMapping(value = "/tiggerEnvCov", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     public Result tiggerEnvCov(@RequestBody @Validated EnvCoverRequest envCoverRequest) {
+        log.info("【指定环境覆盖率采集入参：{}】",envCoverRequest);
         codeCovService.triggerEnvCov(envCoverRequest);
         return Result.success();
     }

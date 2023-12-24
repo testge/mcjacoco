@@ -7,6 +7,7 @@
 <mapper namespace="com.example.mc_jacoco.dao.DeployInfoDao">
     <resultMap id="coverageReportEntity" type="com.example.mc_jacoco.entity.vo.EnvCoverRequest">
         <id column="id" property="id" jdbcType="INTEGER"/>
+        <id column="project_id" property="projectId" jdbcType="INTEGER"/>
         <result column="job_record_uuid" property="uuid" jdbcType="VARCHAR"/>
         <result column="giturl" property="gitUrl" jdbcType="VARCHAR"/>
         <result column="code_path" property="nowVersion" jdbcType="VARCHAR"/>
@@ -20,17 +21,18 @@
     </resultMap>
 
     <sql id="deployInfo">
-        id,job_record_uuid,code_path,address,port,child_modules
+        id,project_id,job_record_uuid,code_path,address,port,child_modules
     </sql>
     <!--  新增服务部署数据  -->
     <insert id="insertDeployInfo">
-        INSERT INTO diff_deploy_info (job_record_uuid, address, port, child_modules, code_path, create_time,
+        INSERT INTO diff_deploy_info (project_id,job_record_uuid, address, port, child_modules, code_path, create_time,
                                       update_time)
-        VALUES (#{uuid,jdbcType=VARCHAR},
+        VALUES (#{projectId,jdbcType=INTEGER},
+                #{uuid,jdbcType=VARCHAR},
                 #{address,jdbcType=VARCHAR},
                 #{port,jdbcType=VARCHAR},
-                #{nowVersion,jdbcType=VARCHAR},
                 #{subModule,jdbcType=VARCHAR},
+                #{nowVersion,jdbcType=VARCHAR},
                 #{createTime,jdbcType=DATE},
                 #{updateTime,jdbcType=DATE})
     </insert>

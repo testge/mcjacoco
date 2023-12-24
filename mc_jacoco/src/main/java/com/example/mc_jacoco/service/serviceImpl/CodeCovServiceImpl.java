@@ -78,6 +78,8 @@ public class CodeCovServiceImpl implements CodeCovService {
     public void triggerEnvCov(EnvCoverRequest envCoverRequest) {
         log.info("【方法triggerEnvCov】【收集覆盖率】【入参信息：{}】", envCoverRequest.toString());
         try {
+            String uuid = UuidUtils.getUUid();
+            envCoverRequest.setUuid(uuid);
             CoverageReportEntity coverageReportEntity = coverageReportEntityBuild(envCoverRequest);
             if (envCoverRequest.getBaseVersion().equals(envCoverRequest.getNowVersion()) && envCoverRequest.getType().equals(ReportTypeEnum.FULL.getCode())) {
                 log.info("【覆盖率基准版本与当前版本一致且计算全量覆盖率，没有增量方法...】");
@@ -631,11 +633,13 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         if (JobStatusEnum.CLONE_FAIL.getCode().equals(coverageReportEntity.getRequestStatus())) {
             log.error("【代码克隆失败...UUID：{}】【线程名称是：{}】", coverageReportEntity.getJobRecordUuid(), Thread.currentThread().getName());
+            return;
         }
     }
 
     private CoverageReportEntity coverageReportEntityBuild(EnvCoverRequest envCoverRequest) {
         CoverageReportEntity coverageReportEntity = new CoverageReportEntity();
+        coverageReportEntity.setProjectId(envCoverRequest.getProjectId());
         coverageReportEntity.setFrom(CoverageFrom.ENV.getEnv());
         coverageReportEntity.setEnvType("");
         coverageReportEntity.setJobRecordUuid(envCoverRequest.getUuid());
@@ -643,7 +647,7 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportEntity.setNowVersion(envCoverRequest.getNowVersion());
         coverageReportEntity.setBaseVersion(envCoverRequest.getBaseVersion());
         coverageReportEntity.setType(envCoverRequest.getType());
-        coverageReportEntity.setSubModule(envCoverRequest.getSubModule());
+        coverageReportEntity.setSubModule("");
         coverageReportEntity.setLineCoverage(-1.00);
         coverageReportEntity.setBranchCoverage(-1.00);
         return coverageReportEntity;

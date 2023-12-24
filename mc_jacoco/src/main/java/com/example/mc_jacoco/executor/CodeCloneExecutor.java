@@ -40,6 +40,7 @@ public class CodeCloneExecutor {
         }
         // 定义log文件地址（基础地址+uuid）
         String logFile = LocalIpUtil.getBaseUrl() + "logs/" + coverageReportEntity.getJobRecordUuid() + ".log";
+        log.info("【logFile地址：{}】",logFile);
         coverageReportEntity.setLog_file(logFile);
         try {
             String uuid = coverageReportEntity.getJobRecordUuid();

@@ -18,6 +18,11 @@ public class CoverageReportEntity {
     private Integer id;
 
     /**
+     * 项目ID
+     */
+    private Integer projectId;
+
+    /**
      * 唯一标识uuid
      */
     private String jobRecordUuid;
@@ -137,6 +142,7 @@ public class CoverageReportEntity {
     public String toString() {
         return "CoverageReportEntity{" +
                 "id=" + id +
+                ", projectId=" + projectId +
                 ", jobRecordUuid='" + jobRecordUuid + '\'' +
                 ", requestStatus=" + requestStatus +
                 ", gitUrl='" + gitUrl + '\'' +

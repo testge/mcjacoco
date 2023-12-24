@@ -13,8 +13,8 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 public class ProjectRequest{
-    private Integer id;
 
+    private Integer projectId;
     /**
      * 项目名称
      */
@@ -25,7 +25,7 @@ public class ProjectRequest{
      * 仓库地址
      */
     @NotBlank(message = "Git仓库地址不能为空")
-    private String codeUrl;
+    private String gitUrl;
 
     /**
      * 基准分支
@@ -62,9 +62,9 @@ public class ProjectRequest{
     @Override
     public String toString() {
         return "ProjectEntity{" +
-                "id=" + id +
+                "projectId=" + projectId +
                 ", projectName='" + projectName + '\'' +
-                ", codeUrl='" + codeUrl + '\'' +
+                ", gitUrl='" + gitUrl + '\'' +
                 ", baseVersion='" + baseVersion + '\'' +
                 ", nowVersion='" + nowVersion + '\'' +
                 ", type=" + type +

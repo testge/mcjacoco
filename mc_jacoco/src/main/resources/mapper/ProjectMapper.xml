@@ -6,9 +6,9 @@
 <!--接口和映射文件相对应-->
 <mapper namespace="com.example.mc_jacoco.dao.ProjectDao">
     <resultMap id="projectMap" type="com.example.mc_jacoco.entity.po.ProjectEntity">
-        <id column="id" property="id" jdbcType="INTEGER"/>
+        <id column="id" property="projectId" jdbcType="INTEGER"/>
         <result column="project_name" property="projectName" jdbcType="VARCHAR"/>
-        <result column="code_url" property="codeUrl" jdbcType="VARCHAR"/>
+        <result column="code_url" property="gitUrl" jdbcType="VARCHAR"/>
         <result column="base_version" property="baseVersion" jdbcType="VARCHAR"/>
         <result column="now_version" property="nowVersion" jdbcType="VARCHAR"/>
         <result column="type" property="type" jdbcType="INTEGER"/>
@@ -26,7 +26,7 @@
     <insert id="insertProject">
         INSERT INTO coverage_project(project_name,code_url,base_version,now_version,`type`,address,port)
         VALUES (#{projectEntity.projectName,jdbcType=VARCHAR},
-                #{projectEntity.codeUrl,jdbcType=VARCHAR},
+                #{projectEntity.gitUrl,jdbcType=VARCHAR},
                 #{projectEntity.baseVersion,jdbcType=VARCHAR},
                 #{projectEntity.nowVersion,jdbcType=VARCHAR},
                 #{projectEntity.type,jdbcType=VARCHAR},
@@ -43,8 +43,8 @@
             <if test="projectEntity.projectName != null and projectEntity.projectName !=''">
                 project_name like CONCAT(CONCAT('%',#{projectEntity.projectName,jdbcType=VARCHAR},'%'))
             </if>
-            <if test="projectEntity.codeUrl != null and projectEntity.codeUrl !=''">
-                AND code_url like CONCAT(CONCAT('%',#{projectEntity.codeUrl,jdbcType=VARCHAR},'%'))
+            <if test="projectEntity.gitUrl != null and projectEntity.gitUrl !=''">
+                AND code_url like CONCAT(CONCAT('%',#{projectEntity.gitUrl,jdbcType=VARCHAR},'%'))
             </if>
             <if test="projectEntity.baseVersion != null and projectEntity.baseVersion !=''">
                 AND base_version= #{projectEntity.baseVersion,jdbcType=VARCHAR}
