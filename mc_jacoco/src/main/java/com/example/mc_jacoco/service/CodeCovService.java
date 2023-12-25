@@ -1,11 +1,12 @@
 package com.example.mc_jacoco.service;
 
+import com.example.mc_jacoco.entity.dto.CovReportInfoDto;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
-import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
-import com.example.mc_jacoco.entity.vo.LocalHostRequest;
-import com.example.mc_jacoco.entity.vo.ResultReponse;
-import com.example.mc_jacoco.entity.vo.UntiCoverRequest;
+import com.example.mc_jacoco.entity.po.ProjectEntity;
+import com.example.mc_jacoco.entity.vo.*;
 import com.example.mc_jacoco.util.Result;
+
+import java.util.List;
 
 /**
  * @author luping
@@ -53,4 +54,10 @@ public interface CodeCovService {
      */
     Result triggerUnitCov(UntiCoverRequest untiCoverRequest);
 
+    /**
+     * 根据项目查询覆盖率报告数据
+     * @param projectEntity
+     * @return
+     */
+    List<CovReportInfoDto> coverageReportList(ProjectRequest projectRequest);
 }

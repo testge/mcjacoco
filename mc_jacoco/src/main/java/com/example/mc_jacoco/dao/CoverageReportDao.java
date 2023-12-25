@@ -35,5 +35,11 @@ public interface CoverageReportDao {
 
     Integer casUpdateByStatus(@Param("expectStatus") Integer expectStatus, @Param("newStatus") int newStatus,@Param("retryCount") Integer retryCount, @Param("uuid") String uuid);
 
+    /**
+     * 项目覆盖率报告数据
+     * @param coverageReportEntity
+     * @return
+     */
+    List<CoverageReportEntity> queryAllCoverageReport(CoverageReportEntity coverageReportEntity);
 
 }

@@ -63,6 +63,10 @@ public class Result<T> {
         return build(ResultEnum.FAIL.getCode(), ResultEnum.FAIL.getMsg(),data);
     }
 
+    public static <T> Result<T> fail(){
+        return build(ResultEnum.FAIL.getCode(), ResultEnum.FAIL.getMsg());
+    }
+
     // 带返回值的Build
     private static <T> Result<T> build(Integer code, String message, T data) {
         Result<T> result = new Result<>();

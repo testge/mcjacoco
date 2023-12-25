@@ -146,4 +146,20 @@
         </where>
     </select>
 
+    <select id="queryAllCoverageReport" resultMap="coverageReportEntity">
+        SELECT <include refid="coverageReport"/> FROM diff_coverage_report
+        <where>
+            <if test="jobRecordUuid !=null and jobRecordUuid !=''">
+                job_record_uuid = #{jobRecordUuid,jdbcType=VARCHAR}
+            </if>
+            <if test="projectId !=null">
+                and project_id = #{projectId,jdbcType=INTEGER}
+            </if>
+            <if test="requestStatus !=null">
+                and request_status = #{requestStatus,jdbcType=INTEGER}
+            </if>
+        </where>
+        order by id desc
+    </select>
+
 </mapper>

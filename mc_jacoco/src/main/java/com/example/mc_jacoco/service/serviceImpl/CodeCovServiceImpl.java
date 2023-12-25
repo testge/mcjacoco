@@ -5,13 +5,13 @@ import com.example.mc_jacoco.constants.NumberConstants;
 import com.example.mc_jacoco.dao.CoverageReportDao;
 import com.example.mc_jacoco.dao.DeployInfoDao;
 import com.example.mc_jacoco.dao.DiffDeployInfoDao;
+import com.example.mc_jacoco.dao.ProjectDao;
+import com.example.mc_jacoco.entity.dto.CovReportInfoDto;
 import com.example.mc_jacoco.entity.dto.CoverageReportDto;
 import com.example.mc_jacoco.entity.po.CoverageReportEntity;
 import com.example.mc_jacoco.entity.po.DeployInfoEntity;
-import com.example.mc_jacoco.entity.vo.EnvCoverRequest;
-import com.example.mc_jacoco.entity.vo.LocalHostRequest;
-import com.example.mc_jacoco.entity.vo.ResultReponse;
-import com.example.mc_jacoco.entity.vo.UntiCoverRequest;
+import com.example.mc_jacoco.entity.po.ProjectEntity;
+import com.example.mc_jacoco.entity.vo.*;
 import com.example.mc_jacoco.enums.CoverageFrom;
 import com.example.mc_jacoco.enums.JobStatusEnum;
 import com.example.mc_jacoco.enums.ReportTypeEnum;
@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author luping
@@ -50,6 +51,9 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     @Resource
     private DiffDeployInfoDao diffDeployInfoDao;
+
+    @Resource
+    private ProjectDao projectDao;
 
     @Resource
     private CodeCloneExecutor codeCloneExecutor;
@@ -302,11 +306,12 @@ public class CodeCovServiceImpl implements CodeCovService {
 
     /**
      * 单元测试覆盖率计算
+     *
      * @param coverageReportEntity
      */
     @Override
     public void calculateUnitCover(CoverageReportEntity coverageReportEntity) {
-        log.info("【{}:计算增量代码覆盖率步骤...开始执行uuid:{}】",Thread.currentThread().getName(),coverageReportEntity.getJobRecordUuid());
+        log.info("【{}:计算增量代码覆盖率步骤...开始执行uuid:{}】", Thread.currentThread().getName(), coverageReportEntity.getJobRecordUuid());
         coverageReportEntity.setRequestStatus(JobStatusEnum.CLONING.getCode());
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         // 执行代码克隆
@@ -322,7 +327,7 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         mavenModuleAddExecutor.addMavenModule(coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
-        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.ADDMODULE_DONE.getCode())){
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.ADDMODULE_DONE.getCode())) {
             return;
         }
         // 执行单元测试
@@ -330,7 +335,7 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         unitTestExecutor.executeUnitTest(coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
-        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.UNITTEST_DONE.getCode())){
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.UNITTEST_DONE.getCode())) {
             return;
         }
         // 分析覆盖率报告
@@ -338,7 +343,7 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         reportAnalyzeExecutor.parseReport(coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
-        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.PARSEREPORT_DONE.getCode())){
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.PARSEREPORT_DONE.getCode())) {
             return;
         }
         // 复制报告
@@ -346,13 +351,13 @@ public class CodeCovServiceImpl implements CodeCovService {
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
         reportAnalyzeExecutor.copyReport(coverageReportEntity);
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
-        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.COPYREPORT_DONE.getCode())){
+        if (!coverageReportEntity.getRequestStatus().equals(JobStatusEnum.COPYREPORT_DONE.getCode())) {
             return;
         }
         // 更新最终状态
         coverageReportEntity.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
         coverageReportDao.updateCoverageReportById(coverageReportEntity);
-        log.info("【uuid:{}的覆盖率任务计算成功...状态：{}】",coverageReportEntity.getJobRecordUuid(),coverageReportEntity.getRequestStatus());
+        log.info("【uuid:{}的覆盖率任务计算成功...状态：{}】", coverageReportEntity.getJobRecordUuid(), coverageReportEntity.getRequestStatus());
     }
 
     /**
@@ -434,9 +439,53 @@ public class CodeCovServiceImpl implements CodeCovService {
                 return Result.fail(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()));
             }
         } catch (Exception e) {
-            log.error(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()) + "【失败原因：{}】",e.getMessage());
+            log.error(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()) + "【失败原因：{}】", e.getMessage());
             return Result.fail(String.format("uuid：%s单元测试数据保存失败", coverReport.getJobRecordUuid()));
         }
+    }
+
+    /**
+     * 根据项目查询覆盖率报告
+     *
+     * @param projectRequest
+     * @return
+     */
+    @Override
+    public List<CovReportInfoDto> coverageReportList(ProjectRequest projectRequest) {
+        log.info("【根据项目查询覆盖率报告入参：{}】",projectRequest);
+        ProjectEntity projectEntity = new ProjectEntity();
+        BeanUtils.copyProperties(projectRequest,projectEntity);
+        ProjectEntity queryProject = projectDao.queryByProject(projectEntity);
+        if (Objects.isNull(queryProject)){
+            return new ArrayList<>();
+        }
+        log.info("【查询项目结果：{}】",queryProject);
+        CoverageReportEntity coverageReport = new CoverageReportEntity();
+        BeanUtils.copyProperties(projectRequest, coverageReport);
+        coverageReport.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
+        List<CoverageReportEntity> coverageReportEntityList = coverageReportDao.queryAllCoverageReport(coverageReport);
+        List<CovReportInfoDto> covReportInfoDtos = coverageReportEntityList.stream().map(value -> {
+            CovReportInfoDto covReport = new CovReportInfoDto();
+            covReport.setId(value.getId());
+            covReport.setProjectId(value.getProjectId());
+            covReport.setProjectName(queryProject.getProjectName());
+            covReport.setJobRecordUuid(value.getJobRecordUuid());
+            covReport.setRequestStatus(value.getRequestStatus());
+            covReport.setGitUrl(value.getGitUrl());
+            covReport.setNowVersion(value.getNowVersion());
+            covReport.setBaseVersion(value.getBaseVersion());
+            covReport.setDiffMethod(value.getDiffMethod());
+            covReport.setType(value.getType());
+            covReport.setReportUrl(value.getReportUrl());
+            covReport.setLineCoverage(value.getLineCoverage());
+            covReport.setBranchCoverage(value.getBranchCoverage());
+            covReport.setSubModule(value.getSubModule());
+            covReport.setFrom(value.getFrom());
+            covReport.setReportFile(value.getReportFile());
+            return covReport;
+        }).collect(Collectors.toList());
+        log.info("【覆盖率报告查询共{}条】",covReportInfoDtos.size());
+        return covReportInfoDtos;
     }
 
     private ResultReponse pullExecFile(LocalHostRequest localHostRequest, String diffFile) {

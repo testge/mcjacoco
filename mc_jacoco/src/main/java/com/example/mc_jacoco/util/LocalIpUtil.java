@@ -9,11 +9,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LocalIpUtil {
 
+    /**
+     * 组装本机服务器的IP
+     * @return
+     */
     public static String getBaseUrl(){
         StringBuilder sb = new StringBuilder();
         try {
             String localIp = GetIPAddressUtil.getLinuxIpAddress();
-            sb.append("http://").append(localIp).append(":8081/");
+            sb.append("http://").append(localIp).append(":5001/");
             return sb.toString();
         } catch (Exception e) {
             log.error("【获取本机机器ip出现异常...】【异常原因：{}】",e.getMessage());

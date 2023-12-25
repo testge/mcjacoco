@@ -65,4 +65,18 @@
         order by id desc
     </select>
 
+    <select id="queryByProject" resultMap="projectMap">
+        SELECT
+        <include refid="projectSql"/>
+        FROM coverage_project
+        <where>
+            <if test="projectEntity.projectName != null">
+                project_name = #{projectEntity.projectName,jdbcType=VARCHAR}
+            </if>
+            <if test="projectEntity.projectId != null">
+               and id = #{projectEntity.projectId,jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
+
 </mapper>

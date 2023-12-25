@@ -16,4 +16,6 @@ public interface ProjectDao {
     Integer insertProject(@Param("projectEntity") ProjectEntity projectEntity);
 
     List<ProjectEntity> queryProject(@Param("projectEntity") ProjectEntity projectEntity);
+
+    ProjectEntity queryByProject(@Param("projectEntity") ProjectEntity projectEntity);
 }
