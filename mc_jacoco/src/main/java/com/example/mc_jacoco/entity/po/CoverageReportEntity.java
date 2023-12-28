@@ -63,14 +63,24 @@ public class CoverageReportEntity {
     private String reportUrl;
 
     /**
+     * 分支覆盖率
+     */
+    private Double branchCoverage;
+
+    /**
      * 行覆盖率
      */
     private Double lineCoverage;
 
     /**
-     * 分支覆盖率
+     * 方法覆盖率
      */
-    private Double branchCoverage;
+    private Double methodCoverage;
+
+    /**
+     * 类覆盖率
+     */
+    private Double classCoverage;
 
     /**
      * 错误消息
@@ -151,8 +161,10 @@ public class CoverageReportEntity {
                 ", diffMethod='" + diffMethod + '\'' +
                 ", type=" + type +
                 ", reportUrl='" + reportUrl + '\'' +
-                ", lineCoverage=" + lineCoverage +
                 ", branchCoverage=" + branchCoverage +
+                ", lineCoverage=" + lineCoverage +
+                ", methodCoverage=" + methodCoverage +
+                ", classCoverage='" + classCoverage + '\'' +
                 ", errMsg='" + errMsg + '\'' +
                 ", subModule='" + subModule + '\'' +
                 ", from=" + from +

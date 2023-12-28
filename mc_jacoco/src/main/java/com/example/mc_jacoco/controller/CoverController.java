@@ -111,4 +111,17 @@ public class CoverController {
         }
         return Result.success(codeCovService.coverageReportList(projectRequest));
     }
+
+    /**
+     * 根据覆盖率报告UUID查询
+     */
+    @RequestMapping(value = "/queryCoverageReportByUuid", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public Result queryCoverageReport(@RequestParam("uuid") String uuid) {
+        log.info("【根据覆盖率报告UUID查询入参：{}】", uuid);
+        // 端上给传的是空时写入默认值
+        if (StringUtils.isBlank(uuid)){
+            return Result.fail();
+        }
+        return Result.success(codeCovService.coverageReportEntity(uuid));
+    }
 }

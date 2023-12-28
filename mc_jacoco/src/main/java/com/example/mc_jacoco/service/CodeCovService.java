@@ -60,4 +60,6 @@ public interface CodeCovService {
      * @return
      */
     List<CovReportInfoDto> coverageReportList(ProjectRequest projectRequest);
+
+    CovReportInfoDto coverageReportEntity(String uuid);
 }

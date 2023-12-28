@@ -50,6 +50,8 @@ public class ReportAnalyzeExecutor {
                 Elements lineCtr2 = document.getElementById("coveragetable").getElementsByTag("tfoot").first().getElementsByClass("ctr2");
                 double lineCoverage = 100;
                 double branchCoverage = 100;
+                double methodCoverage = 100;
+                double classCoverage = 100;
                 if (document != null && bars != null) {
                     // 覆盖率报告文件行未覆盖的数量
                     double lineMolecule = Double.parseDouble(lineCtr1.get(1).text());
@@ -73,10 +75,30 @@ public class ReportAnalyzeExecutor {
                     } else {
                         branchCoverage = 0;
                     }
+                    // 计算方法未覆盖数
+                    double methodNotCover = Double.parseDouble(lineCtr1.get(2).text());
+                    log.info("【未覆盖方法结果是：{}】", methodNotCover);
+                    // 方法总数
+                    double methodAmount= Double.parseDouble(lineCtr2.get(4).text());
+                    log.info("【方法总数量结果是：{}】", methodAmount);
+                    // 计算行覆盖率
+                    methodCoverage = (methodAmount - methodNotCover) / methodAmount * 100;
+                    log.info("【方法覆盖率计算结果是：{}】", methodCoverage);
+                    // 计算类未覆盖数
+                    double classNotCover = Double.parseDouble(lineCtr1.get(3).text());
+                    log.info("【类覆盖方法结果是：{}】", classNotCover);
+                    // 类总数
+                    double classAmount= Double.parseDouble(lineCtr2.get(5).text());
+                    log.info("【方法总数量结果是：{}】", classAmount);
+                    // 计算类覆盖率
+                    classCoverage = (classAmount - classNotCover) / classAmount * 100;
+                    log.info("【类覆盖率计算结果是：{}】", classCoverage);
                     log.info("【行覆盖率计算结果是：{}，分支覆盖率计算结果是：{}】", lineCoverage, branchCoverage);
                 }
                 coverageReport.setLineCoverage(lineCoverage);
                 coverageReport.setBranchCoverage(branchCoverage);
+                coverageReport.setMethodCoverage(methodCoverage);
+                coverageReport.setClassCoverage(classCoverage);
                 coverageReport.setRequestStatus(JobStatusEnum.PARSEREPORT_DONE.getCode());
                 return true;
             } else {

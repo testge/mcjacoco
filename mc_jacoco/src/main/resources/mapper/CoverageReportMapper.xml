@@ -19,6 +19,8 @@
         <result column="report_file" property="reportFile" jdbcType="VARCHAR"/>
         <result column="line_coverage" property="lineCoverage" jdbcType="DOUBLE"/>
         <result column="branch_coverage" property="branchCoverage" jdbcType="DOUBLE"/>
+        <result column="method_coverage" property="methodCoverage" jdbcType="DOUBLE"/>
+        <result column="class_coverage" property="classCoverage" jdbcType="DOUBLE"/>
         <result column="err_msg" property="errMsg" jdbcType="VARCHAR"/>
         <result column="sub_module" property="subModule" jdbcType="VARCHAR"/>
         <result column="from" property="from" jdbcType="INTEGER"/>
@@ -27,20 +29,20 @@
         <result column="base_local_path" property="baseLocalPath" jdbcType="VARCHAR"/>
         <result column="log_file" property="log_file" jdbcType="VARCHAR"/>
         <result column="env_type" property="envType" jdbcType="VARCHAR"/>
-        <result column="create_time" property="createTime" jdbcType="DATE"/>
-        <result column="update_time" property="updateTime" jdbcType="DATE"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="coverageReport">
         id,project_id,job_record_uuid,request_status,giturl,now_version,base_version,diffmethod,`type`,report_url,report_file,line_coverage,branch_coverage,
-            err_msg,sub_module,`from`,retry_count,now_local_path,base_local_path,log_file,env_type
+            method_coverage,class_coverage,err_msg,sub_module,`from`,retry_count,now_local_path,base_local_path,log_file,env_type,update_time
     </sql>
 
     <!--  保存覆盖率数据  -->
     <insert id="insertCoverageReportById" parameterType="com.example.mc_jacoco.entity.po.CoverageReportEntity">
         INSERT INTO diff_coverage_report(project_id,`from`, `job_record_uuid`, `giturl`, `now_version`, `base_version`, `type`,
                                          `sub_module`, `line_coverage`,
-                                         `branch_coverage`, `request_status`,`env_type`, `err_msg`)
+                                         `branch_coverage`,`method_coverage`,`class_coverage`, `request_status`,`env_type`, `err_msg`)
         values (#{projectId,jdbcType=INTEGER},
                 #{from,jdbcType=INTEGER},
                 #{jobRecordUuid,jdbcType=VARCHAR},
@@ -51,6 +53,8 @@
                 #{subModule,jdbcType=VARCHAR},
                 #{branchCoverage,jdbcType=DOUBLE},
                 #{lineCoverage,jdbcType=DOUBLE},
+                #{methodCoverage,jdbcType=DOUBLE},
+                #{classCoverage,jdbcType=DOUBLE},
                 #{requestStatus,jdbcType=INTEGER},
                 #{envType,jdbcType=VARCHAR},
                 #{errMsg,jdbcType=VARCHAR})
@@ -85,6 +89,12 @@
             </if>
             <if test="coverageReportEntity.branchCoverage != null">
                 branch_coverage = #{coverageReportEntity.branchCoverage,jdbcType=DOUBLE},
+            </if>
+            <if test="coverageReportEntity.methodCoverage != null">
+                method_coverage = #{coverageReportEntity.methodCoverage,jdbcType=DOUBLE},
+            </if>
+            <if test="coverageReportEntity.classCoverage != null">
+                class_coverage = #{coverageReportEntity.classCoverage,jdbcType=DOUBLE},
             </if>
             <if test="coverageReportEntity.errMsg != null">
                 err_msg = #{coverageReportEntity.errMsg,jdbcType=VARCHAR},

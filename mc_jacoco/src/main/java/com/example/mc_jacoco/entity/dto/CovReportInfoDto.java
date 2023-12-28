@@ -1,6 +1,9 @@
 package com.example.mc_jacoco.entity.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
+import java.util.Date;
 
 /**
  * @author luping
@@ -75,6 +78,16 @@ public class CovReportInfoDto {
     private Double branchCoverage;
 
     /**
+     * 方法覆盖率
+     */
+    private Double methodCoverage;
+
+    /**
+     * 类覆盖率
+     */
+    private Double classCoverage;
+
+    /**
      * 子模块
      */
     private String subModule;
@@ -89,4 +102,7 @@ public class CovReportInfoDto {
      * 报告地址
      */
     private String reportFile;
+
+    @JsonFormat(locale="zh",timezone="GMT+8",pattern="yyyy-MM-dd HH:mm:ss")
+    private Date updateTime;
 }

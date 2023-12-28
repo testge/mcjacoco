@@ -36,6 +36,8 @@ public class CodeCloneExecutor {
             coverageReportEntity.setRequestStatus(JobStatusEnum.NODIFF.getCode());
             coverageReportEntity.setBranchCoverage(Double.valueOf("100"));
             coverageReportEntity.setLineCoverage(Double.valueOf("100"));
+            coverageReportEntity.setMethodCoverage(Double.valueOf("100"));
+            coverageReportEntity.setClassCoverage(Double.valueOf("100"));
             return;
         }
         // 定义log文件地址（基础地址+uuid）

@@ -89,6 +89,8 @@ public class CodeCovServiceImpl implements CodeCovService {
                 log.info("【覆盖率基准版本与当前版本一致且计算全量覆盖率，没有增量方法...】");
                 coverageReportEntity.setBranchCoverage(DoubleUtil.resultDouble("100"));
                 coverageReportEntity.setLineCoverage(DoubleUtil.resultDouble("100"));
+                coverageReportEntity.setMethodCoverage(DoubleUtil.resultDouble("100"));
+                coverageReportEntity.setClassCoverage(DoubleUtil.resultDouble("100"));
                 coverageReportEntity.setRequestStatus(JobStatusEnum.NODIFF.getCode());
                 coverageReportEntity.setErrMsg("没有增量方法");
                 log.info("【没有增量方法插入数据，插入数据：{}】", coverageReportEntity);
@@ -197,6 +199,8 @@ public class CodeCovServiceImpl implements CodeCovService {
                         Elements lineCtr2 = document.getElementById("coveragetable").getElementsByTag("tfoot").first().getElementsByClass("ctr2");
                         double lineCoverage = 100;
                         double branchCoverage = 100;
+                        double methodCoverage = 100;
+                        double classCoverage = 100;
                         if (document != null && bars != null) {
                             // 覆盖率报告文件行未覆盖的数量
                             double lineMolecule = Double.parseDouble(lineCtr1.get(1).text());
@@ -221,6 +225,24 @@ public class CodeCovServiceImpl implements CodeCovService {
                                 branchCoverage = 0;
                             }
                             log.info("【分支覆盖率计算结果是：{}】", branchCoverage);
+                            // 计算方法未覆盖数
+                            double methodNotCover = Double.parseDouble(lineCtr1.get(2).text());
+                            log.info("【未覆盖方法结果是：{}】", methodNotCover);
+                            // 方法总数
+                            double methodAmount= Double.parseDouble(lineCtr2.get(4).text());
+                            log.info("【方法总数量结果是：{}】", methodAmount);
+                            // 计算行覆盖率
+                            methodCoverage = (methodAmount - methodNotCover) / methodAmount * 100;
+                            log.info("【方法覆盖率计算结果是：{}】", methodCoverage);
+                            // 计算类未覆盖数
+                            double classNotCover = Double.parseDouble(lineCtr1.get(3).text());
+                            log.info("【类覆盖方法结果是：{}】", classNotCover);
+                            // 类总数
+                            double classAmount= Double.parseDouble(lineCtr2.get(5).text());
+                            log.info("【方法总数量结果是：{}】", classAmount);
+                            // 计算类覆盖率
+                            classCoverage = (classAmount - classNotCover) / classAmount * 100;
+                            log.info("【类覆盖率计算结果是：{}】", classCoverage);
                         }
                         // 将生成的覆盖率报告拷贝到，根目录下的report目录中
                         String[] cpReportCmd = new String[]{"cp -rf " + covFile.getParent() + " " + AddressConstants.REPORT_PATH + coverageReportEntity.getJobRecordUuid() + "/"};
@@ -229,6 +251,8 @@ public class CodeCovServiceImpl implements CodeCovService {
                         coverageReportEntity.setRequestStatus(JobStatusEnum.SUCCESS.getCode());
                         coverageReportEntity.setLineCoverage(lineCoverage);
                         coverageReportEntity.setBranchCoverage(branchCoverage);
+                        coverageReportEntity.setMethodCoverage(methodCoverage);
+                        coverageReportEntity.setClassCoverage(classCoverage);
                         return;
                     } catch (Exception e) {
                         coverageReportEntity.setRequestStatus(JobStatusEnum.ENVREPORT_FAIL.getCode());
@@ -479,13 +503,30 @@ public class CodeCovServiceImpl implements CodeCovService {
             covReport.setReportUrl(value.getReportUrl());
             covReport.setLineCoverage(value.getLineCoverage());
             covReport.setBranchCoverage(value.getBranchCoverage());
+            covReport.setMethodCoverage(value.getMethodCoverage());
+            covReport.setClassCoverage(value.getClassCoverage());
             covReport.setSubModule(value.getSubModule());
             covReport.setFrom(value.getFrom());
             covReport.setReportFile(value.getReportFile());
+            covReport.setUpdateTime(value.getUpdateTime());
             return covReport;
         }).collect(Collectors.toList());
         log.info("【覆盖率报告查询共{}条】",covReportInfoDtos.size());
         return covReportInfoDtos;
+    }
+
+    /**
+     * 根据报告UUid查询数据
+     * @param uuid
+     * @return
+     */
+    @Override
+    public CovReportInfoDto coverageReportEntity(String uuid) {
+        CoverageReportEntity coverageReport = coverageReportDao.queryCoverageReportByUuid(uuid);
+        log.info("【根据报告UUid查询数据结果：{}】",coverageReport);
+        CovReportInfoDto covReportInfoDto = new CovReportInfoDto();
+        BeanUtils.copyProperties(coverageReport,covReportInfoDto);
+        return covReportInfoDto;
     }
 
     private ResultReponse pullExecFile(LocalHostRequest localHostRequest, String diffFile) {
